@@ -23,6 +23,11 @@ sub get_commands
 			args => sub { shift->help_args(undef, @_); },
 			meth => sub { shift->help_call(undef, @_); }
 		}, 
+        "exit" => {
+            desc => "Exits the program.",
+            maxargs => 0,
+			meth => sub { shift->exit_requested(1); },
+        },
 		"exists" => {
 			desc => "Shows whether files exist",
 			args => sub { shift->complete_files(@_); },
@@ -57,7 +62,7 @@ EOL
 		"quit" => {
 			desc => "Quit using Fileman",
 			maxargs => 0,
-			meth => sub { shift->exit_requested(1); }
+			meth => sub { shift->exit_requested(1); },
 		},
 # Uncomment the default command to see how it is called.
 # It might be a mite confusing so it's disabled by default.

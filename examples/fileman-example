@@ -14,6 +14,7 @@ use strict;
 use lib '../lib';
 use Term::GDBUI;
 use File::stat qw(:FIELDS);
+use Cwd;
 
 
 # Prevents us from doing anything harmful.
@@ -26,6 +27,7 @@ sub danger
 
 
 my $term = new Term::GDBUI(commands => get_commands());
+$term->prompt(sub { getcwd() . " FM> " });
 $term->run();
 
 sub get_commands
@@ -33,10 +35,12 @@ sub get_commands
 	return {
 		"cd" => 	{ desc => "Change to directory DIR",
 					  args => sub { shift->complete_onlydirs(@_); },
-					  maxargs => 1, proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); } }, 
+					  maxargs => 1,
+                      proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}) or print("Could not cd: $!\n") } }, 
 		"delete" =>	{ desc => "Delete FILEs",
 					  args => sub { shift->complete_onlyfiles(@_); },
-					  minargs => 1, proc => sub { danger() && unlink(@_); } }, 
+					  minargs => 1,
+                      proc => sub { danger() && (unlink(@_) or warn "Could not delete: $!\n") } }, 
 		"?" =>		{ syn => "help" },
 		"help" => 	{ desc => "Print helpful information",
 					  args => sub { shift->help_args(undef, @_); },
@@ -47,9 +51,11 @@ sub get_commands
 					  args => sub { shift->complete_onlydirs(@_); },
 					  proc => sub { system('ls', '-FClg', @_); } }, 
 		"pwd" =>	{ desc => "Print the current working directory",
-					  maxargs => 0, proc => sub { system('pwd'); } }, 
+					  maxargs => 0,
+                      proc => sub { system('pwd'); } }, 
 		"quit" =>	{ desc => "Quit using Fileman",
-					  maxargs => 0, meth => sub { shift->exit_requested(1); } }, 
+					  maxargs => 0,
+                      meth => sub { shift->exit_requested(1); } }, 
 		"rename" =>	{ desc => "Rename FILE to NEWNAME",
 					  args => sub { shift->complete_files(@_); },
 					  minargs => 2, maxargs => 2,

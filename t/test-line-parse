@@ -27,26 +27,26 @@ print "\nTest Result\n---------------------------------\n" unless $verbose;
 
 my($ntests, $nfail) = (0,0);
 for my $input (sort keys %Parse::Tests) {
-	my($index,$cpos,$test) = $input =~ /^(\d+):(\d*):(.*)$/;
-	die "No test in item $index:    $input\n" unless defined $test;
-	next if %seltest && !exists($seltest{0+$index});
+    my($index,$cpos,$test) = $input =~ /^(\d+):(\d*):(.*)$/;
+    die "No test in item $index:    $input\n" unless defined $test;
+    next if %seltest && !exists($seltest{0+$index});
 
-	my($toks, $tokno, $tokoff) = $parser->parse_line($test, messages=>$verbose, cursorpos=>$cpos);
-	my $result = [$toks, $tokno, $tokoff];
-	my $eq = 0 == cmpStr($result, $Parse::Tests{$input});
-	
-	if($verbose) {
-		print "\nTest $index: $test cursor=$cpos\n";
-		print "Expected output: " . freeze($Parse::Tests{$input}) . "\n";
-		print Dump($Parse::Tests{$input});
-		print "Received output: " . freeze($result) . "\n";
-		print Dump($result);
-	} else {
-		printf("%2d: %s    $test\n", $index, ($eq ? 'OK  ' : 'FAIL'));
-	}
+    my($toks, $tokno, $tokoff) = $parser->parse_line($test, messages=>$verbose, cursorpos=>$cpos);
+    my $result = [$toks, $tokno, $tokoff];
+    my $eq = 0 == cmpStr($result, $Parse::Tests{$input});
+    
+    if($verbose) {
+        print "\nTest $index: $test cursor=$cpos\n";
+        print "Expected output: " . freeze($Parse::Tests{$input}) . "\n";
+        print Dump($Parse::Tests{$input});
+        print "Received output: " . freeze($result) . "\n";
+        print Dump($result);
+    } else {
+        printf("%2d: %s    $test\n", $index, ($eq ? 'OK  ' : 'FAIL'));
+    }
 
-	$ntests++;
-	$nfail++ unless $eq;
+    $ntests++;
+    $nfail++ unless $eq;
 }
 
 print "\n\n$ntests test" . ($ntests == 1 ? "" : "s") ." run, ";

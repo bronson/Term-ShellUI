@@ -29,8 +29,9 @@ This module is very similar to Text::Shellwords and Text::ParseWords.
 However, it has one very significant difference: it keeps track of
 a character position in the line it's parsing.  For instance, if you
 pass it ("zq fmgb", cursorpos=>6), it would return
-(['zq', 'fmgb'], 1, 3).  Cursorpos tells where in the input string the
-cursor resides (just before the 'b'), and the result tells you that
+(['zq', 'fmgb'], 1, 3).  The cursorpos parameter
+tells where in the input string the cursor resides
+(just before the 'b'), and the result tells you that
 the cursor was on token 1 ('fmgb'), character 3 ('b').
 This is very useful when computing command-line completions
 involving quoting, escaping, and tokenizing characters (like '(' or '=').
@@ -100,17 +101,17 @@ parser, and the error message to display as a string.
 
 sub new
 {
-	my $type = shift;
-	bless {
-		keep_quotes => 0,
-		token_chars => '',
-		debug => 0,
-		space_none => '(',
-		space_before => '[{',
-		space_after => ',)]}',
-		error => undef,
-		@_
-	}, $type
+    my $type = shift;
+    bless {
+        keep_quotes => 0,
+        token_chars => '',
+        debug => 0,
+        space_none => '(',
+        space_before => '[{',
+        space_after => ',)]}',
+        error => undef,
+        @_
+    }, $type
 }
 
 =item parsebail(msg)
@@ -122,11 +123,11 @@ error, they call parsebail to present a very descriptive diagnostic.
 
 sub parsebail
 {
-	my $self = shift;
-	my $msg = shift;
+    my $self = shift;
+    my $msg = shift;
 
-	die "$msg at char " . pos() . ":\n",
-	"    $_\n    " . (' ' x pos()) . '^' . "\n";
+    die "$msg at char " . pos() . ":\n",
+    "    $_\n    " . (' ' x pos()) . '^' . "\n";
 
 }
 
@@ -142,178 +143,178 @@ instead.
 
 sub parsel
 {
-	my $self = shift;
-	$_ = shift;
-	my $cursorpos = shift;
-	my $fixclosequote = shift;
+    my $self = shift;
+    $_ = shift;
+    my $cursorpos = shift;
+    my $fixclosequote = shift;
 
-	my $deb = $self->{debug};
-	my $tchrs = $self->{token_chars};
+    my $deb = $self->{debug};
+    my $tchrs = $self->{token_chars};
 
-	my $usingcp = (defined($cursorpos) && $cursorpos ne '');
-	my $tokno = undef;
-	my $tokoff = undef;
-	my $oldpos;
+    my $usingcp = (defined($cursorpos) && $cursorpos ne '');
+    my $tokno = undef;
+    my $tokoff = undef;
+    my $oldpos;
 
-	my @pieces = ();
+    my @pieces = ();
 
-	# Need to special case the empty string.  None of the patterns below
-	# will match it yet we need to return an empty token for the cursor.
-	return ([''], 0, 0) if $usingcp && $_ eq '';
+    # Need to special case the empty string.  None of the patterns below
+    # will match it yet we need to return an empty token for the cursor.
+    return ([''], 0, 0) if $usingcp && $_ eq '';
 
-	/^/gc;  # force scanning to the beginning of the line
+    /^/gc;  # force scanning to the beginning of the line
 
-	do {
-		$deb && print "-- top, pos=" . pos() . 
-			($usingcp ? " cursorpos=$cursorpos" : "") . "\n";
+    do {
+        $deb && print "-- top, pos=" . pos() . 
+            ($usingcp ? " cursorpos=$cursorpos" : "") . "\n";
 
-		# trim whitespace from the beginning
-		if(/\G(\s+)/gc) {
-			$deb && print "trimmed " . length($1) . " whitespace chars, " .
-				($usingcp ? "cursorpos=$cursorpos" : "") . "\n";
-			# if pos passed cursorpos, then we know that the cursor was
-			# surrounded by ws and we need to create an empty token for it.
-			if($usingcp && (pos() >= $cursorpos)) {
-				# if pos == cursorpos and we're not yet at EOL, let next token accept cursor
-				unless(pos() == $cursorpos && pos() < length($_)) {
-					# need to special-case at end-of-line as there are no more tokens
-					# to take care of the cursor so we must create an empty one.
-					$deb && print "adding bogus token to handle cursor.\n";
-					push @pieces, '';
-					$tokno = $#pieces;
-					$tokoff = 0;
-					$usingcp = 0;
-				}
-			}
-		}
+        # trim whitespace from the beginning
+        if(/\G(\s+)/gc) {
+            $deb && print "trimmed " . length($1) . " whitespace chars, " .
+                ($usingcp ? "cursorpos=$cursorpos" : "") . "\n";
+            # if pos passed cursorpos, then we know that the cursor was
+            # surrounded by ws and we need to create an empty token for it.
+            if($usingcp && (pos() >= $cursorpos)) {
+                # if pos == cursorpos and we're not yet at EOL, let next token accept cursor
+                unless(pos() == $cursorpos && pos() < length($_)) {
+                    # need to special-case at end-of-line as there are no more tokens
+                    # to take care of the cursor so we must create an empty one.
+                    $deb && print "adding bogus token to handle cursor.\n";
+                    push @pieces, '';
+                    $tokno = $#pieces;
+                    $tokoff = 0;
+                    $usingcp = 0;
+                }
+            }
+        }
 
-		# if there's a quote, then suck to the close quote
-		$oldpos = pos();
-		if(/\G(['"])/gc) {
-			my $quote = $1;
-			my $adjust = 0;	# keeps track of tokoff bumps due to subs, etc.
-			my $s;
+        # if there's a quote, then suck to the close quote
+        $oldpos = pos();
+        if(/\G(['"])/gc) {
+            my $quote = $1;
+            my $adjust = 0; # keeps track of tokoff bumps due to subs, etc.
+            my $s;
 
-			$deb && print "Found open quote [$quote]  oldpos=$oldpos\n";
+            $deb && print "Found open quote [$quote]  oldpos=$oldpos\n";
 
-			# adjust tokoff unless the cursor sits directly on the open quote
-			if($usingcp && pos()-1 < $cursorpos) {
-				$deb && print "  lead quote increment   pos=".pos()." cursorpos=$cursorpos\n";
-				$adjust += 1;
-			}
+            # adjust tokoff unless the cursor sits directly on the open quote
+            if($usingcp && pos()-1 < $cursorpos) {
+                $deb && print "  lead quote increment   pos=".pos()." cursorpos=$cursorpos\n";
+                $adjust += 1;
+            }
 
-			if($quote eq '"') {
-				if(/\G((?:\\.|(?!["])[^\\])*)["]/gc) {
-					$s = $1;	# string without quotes
-				} else {
-					unless($fixclosequote) {
-						pos() -= 1;
-						$self->parsebail("need closing quote [\"]");
-					}
-					/\G(.*)$/gc;	# if no close quote, just suck to the end of the string
-					$s = $1;	# string without quotes
-					if($usingcp && pos() == $cursorpos) { $adjust -= 1; }	# make cursor think cq was there
-				}
-				$deb && print "  quoted string is \"$s\"\n";
-				while($s =~ /\\./g) { 
-					my $ps = pos($s) - 2; 	# points to the start of the sub
-					$deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
-					$adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
-					substr($s, $ps, 1) = '';
-					pos($s) = $ps + 1;
-					$deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
-				}
-			} else {
-				if(/\G((?:\\.|(?!['])[^\\])*)[']/gc) {
-					$s = $1;	# string without quotes
-				} else {
-					unless($fixclosequote) {
-						pos() -= 1;
-						$self->parsebail("need closing quote [']");
-					}
-					/\G(.*)$/gc;	# if no close quote, just suck to the end of the string
-					$s = $1;
-					if($usingcp && pos() == $cursorpos) { $adjust -= 1; }	# make cursor think cq was there
-				}
-				$deb && print "  quoted string is '$s'\n";
-				while($s =~ /\\[\\']/g) { 
-					my $ps = pos($s) - 2; 	# points to the start of the sub
-					$deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
-					$adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
-					substr($s, $ps, 1) = '';
-					pos($s) = $ps + 1;
-					$deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
-				}
-			}
+            if($quote eq '"') {
+                if(/\G((?:\\.|(?!["])[^\\])*)["]/gc) {
+                    $s = $1;    # string without quotes
+                } else {
+                    unless($fixclosequote) {
+                        pos() -= 1;
+                        $self->parsebail("need closing quote [\"]");
+                    }
+                    /\G(.*)$/gc;    # if no close quote, just suck to the end of the string
+                    $s = $1;    # string without quotes
+                    if($usingcp && pos() == $cursorpos) { $adjust -= 1; }   # make cursor think cq was there
+                }
+                $deb && print "  quoted string is \"$s\"\n";
+                while($s =~ /\\./g) { 
+                    my $ps = pos($s) - 2;   # points to the start of the sub
+                    $deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
+                    $adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
+                    substr($s, $ps, 1) = '';
+                    pos($s) = $ps + 1;
+                    $deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
+                }
+            } else {
+                if(/\G((?:\\.|(?!['])[^\\])*)[']/gc) {
+                    $s = $1;    # string without quotes
+                } else {
+                    unless($fixclosequote) {
+                        pos() -= 1;
+                        $self->parsebail("need closing quote [']");
+                    }
+                    /\G(.*)$/gc;    # if no close quote, just suck to the end of the string
+                    $s = $1;
+                    if($usingcp && pos() == $cursorpos) { $adjust -= 1; }   # make cursor think cq was there
+                }
+                $deb && print "  quoted string is '$s'\n";
+                while($s =~ /\\[\\']/g) { 
+                    my $ps = pos($s) - 2;   # points to the start of the sub
+                    $deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
+                    $adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
+                    substr($s, $ps, 1) = '';
+                    pos($s) = $ps + 1;
+                    $deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
+                }
+            }
 
-			# adjust tokoff if the cursor if it sits directly on the close quote
-			if($usingcp && pos() == $cursorpos) {
-				$deb && print "  trail quote increment  pos=".pos()." cursorpos=$cursorpos\n";
-				$adjust += 1;
-			}
+            # adjust tokoff if the cursor if it sits directly on the close quote
+            if($usingcp && pos() == $cursorpos) {
+                $deb && print "  trail quote increment  pos=".pos()." cursorpos=$cursorpos\n";
+                $adjust += 1;
+            }
 
-			$deb && print "  Found close, pushing '$s'  oldpos=$oldpos\n";
-			if($self->{keep_quotes}) {
-				$adjust -= 1;	# need to move right 1 for opening quote
-				$s = $quote.$s.$quote;
-			}
-			push @pieces, $s;
+            $deb && print "  Found close, pushing '$s'  oldpos=$oldpos\n";
+            if($self->{keep_quotes}) {
+                $adjust -= 1;   # need to move right 1 for opening quote
+                $s = $quote.$s.$quote;
+            }
+            push @pieces, $s;
 
-			# Set tokno and tokoff if this token contained the cursor
-			if($usingcp && pos() >= $cursorpos) {
-				# Previous block contains the cursor
-				$tokno = $#pieces;
-				$tokoff = $cursorpos - $oldpos - $adjust;
-				$usingcp = 0;
-			}
-		}
+            # Set tokno and tokoff if this token contained the cursor
+            if($usingcp && pos() >= $cursorpos) {
+                # Previous block contains the cursor
+                $tokno = $#pieces;
+                $tokoff = $cursorpos - $oldpos - $adjust;
+                $usingcp = 0;
+            }
+        }
 
-		# suck up as much unquoted text as we can
-		$oldpos = pos();
-		if(/\G((?:\\.|[^\s\\"'\Q$tchrs\E])+)/gco) {
-			my $s = $1;		# the unquoted string
-			my $adjust = 0;	# keeps track of tokoff bumps due to subs, etc.
+        # suck up as much unquoted text as we can
+        $oldpos = pos();
+        if(/\G((?:\\.|[^\s\\"'\Q$tchrs\E])+)/gco) {
+            my $s = $1;     # the unquoted string
+            my $adjust = 0; # keeps track of tokoff bumps due to subs, etc.
 
-			$deb && print "Found unquoted string '$s'\n";
-			while($s =~ /\\./g) { 
-				my $ps = pos($s) - 2;	# points to the start of substitution
-				$deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
-				$adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
-				substr($s, $ps, 1) = '';
-				pos($s) = $ps + 1;
-				$deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
-			}
-			$deb && print "  pushing '$s'\n";
-			push @pieces, $s;
+            $deb && print "Found unquoted string '$s'\n";
+            while($s =~ /\\./g) { 
+                my $ps = pos($s) - 2;   # points to the start of substitution
+                $deb && print "  doing substr at $ps on '$s'  oldpos=$oldpos adjust=$adjust\n";
+                $adjust += 1 if $usingcp && $ps < $cursorpos - $oldpos - $adjust;
+                substr($s, $ps, 1) = '';
+                pos($s) = $ps + 1;
+                $deb && print "  s='$s'  usingcp=$usingcp  pos(s)=" . pos($s) . "  cursorpos=$cursorpos  oldpos=$oldpos adjust=$adjust\n";
+            }
+            $deb && print "  pushing '$s'\n";
+            push @pieces, $s;
 
-			# Set tokno and tokoff if this token contained the cursor
-			if($usingcp && pos() >= $cursorpos) {
-				# Previous block contains the cursor
-				$tokno = $#pieces;
-				$tokoff = $cursorpos - $oldpos - $adjust;
-				$usingcp = 0;
-			}
-		}
+            # Set tokno and tokoff if this token contained the cursor
+            if($usingcp && pos() >= $cursorpos) {
+                # Previous block contains the cursor
+                $tokno = $#pieces;
+                $tokoff = $cursorpos - $oldpos - $adjust;
+                $usingcp = 0;
+            }
+        }
 
-		if(length($tchrs) && /\G([\Q$tchrs\E])/gco) {
-			my $s = $1;	# the token char
-			$deb && print "  pushing '$s'\n";
-			push @pieces, $s;
+        if(length($tchrs) && /\G([\Q$tchrs\E])/gco) {
+            my $s = $1; # the token char
+            $deb && print "  pushing '$s'\n";
+            push @pieces, $s;
 
-			if($usingcp && pos() == $cursorpos) {
-				# Previous block contains the cursor
-				$tokno = $#pieces;
-				$tokoff = 0;
-				$usingcp = 0;
-			}
-		}
-	} until(pos() >= length($_));
+            if($usingcp && pos() == $cursorpos) {
+                # Previous block contains the cursor
+                $tokno = $#pieces;
+                $tokoff = 0;
+                $usingcp = 0;
+            }
+        }
+    } until(pos() >= length($_));
 
-	$deb && print "Result: (", join(", ", @pieces), ") " . 
-		(defined($tokno) ? $tokno : 'undef') . " " .
-		(defined($tokoff) ? $tokoff : 'undef') . "\n";
+    $deb && print "Result: (", join(", ", @pieces), ") " . 
+        (defined($tokno) ? $tokno : 'undef') . " " .
+        (defined($tokoff) ? $tokoff : 'undef') . "\n";
 
-	return ([@pieces], $tokno, $tokoff);
+    return ([@pieces], $tokno, $tokoff);
 }
 
 
@@ -411,23 +412,23 @@ token will be created for it.
 
 sub parse_line
 {
-	my $self = shift;
-	my $line = shift;
-	my %args = (
-		messages => 1,		# true if we should print errors, etc.
-		cursorpos => undef,	# cursor to keep track of, undef to ignore.
-		fixclosequote => 0,
-		@_
-	);
+    my $self = shift;
+    my $line = shift;
+    my %args = (
+        messages => 1,      # true if we should print errors, etc.
+        cursorpos => undef, # cursor to keep track of, undef to ignore.
+        fixclosequote => 0,
+        @_
+    );
 
-	my @result = eval { $self->parsel($line,
-		$args{'cursorpos'}, $args{'fixclosequote'}) };
-	if($@) {
-		$self->{error}->($self, $@) if $args{'messages'} && $self->{error};
-		@result = (undef, undef, undef);
-	}
+    my @result = eval { $self->parsel($line,
+        $args{'cursorpos'}, $args{'fixclosequote'}) };
+    if($@) {
+        $self->{error}->($self, $@) if $args{'messages'} && $self->{error};
+        @result = (undef, undef, undef);
+    }
 
-	return @result;
+    return @result;
 }
 
 
@@ -441,25 +442,25 @@ will be modified in-place).
 
 sub parse_escape
 {
-	my $self = shift;
-	my $arr = shift;	# either a string or an arrayref of strings
+    my $self = shift;
+    my $arr = shift;    # either a string or an arrayref of strings
 
-	my $wantstr = 0;
-	if(ref($arr) ne 'ARRAY') {
-		$arr = [$arr];
-		$wantstr = 1;
-	}
+    my $wantstr = 0;
+    if(ref($arr) ne 'ARRAY') {
+        $arr = [$arr];
+        $wantstr = 1;
+    }
 
-	foreach(@$arr) {
-		my $quote;
-		if($self->{keep_quotes} && /^(['"])(.*)\1$/) {
-			($quote, $_) = ($1, $2);
-		}
-		s/([ \\"'])/\\$1/g;
-		$_ = $quote.$_.$quote if $quote;
-	}
+    foreach(@$arr) {
+        my $quote;
+        if($self->{keep_quotes} && /^(['"])(.*)\1$/) {
+            ($quote, $_) = ($1, $2);
+        }
+        s/([ \\"'])/\\$1/g;
+        $_ = $quote.$_.$quote if $quote;
+    }
 
-	return $wantstr ? $arr->[0] : $arr;
+    return $wantstr ? $arr->[0] : $arr;
 }
 
 
@@ -487,33 +488,33 @@ will have space placed both before and after.
 
 sub join_line
 {
-	my $self = shift;
-	my $intoks = shift;
+    my $self = shift;
+    my $intoks = shift;
 
-	my $tchrs = $self->{token_chars};
-	my $s_none = $self->{space_none};
-	my $s_before = $self->{space_before};
-	my $s_after = $self->{space_after};
+    my $tchrs = $self->{token_chars};
+    my $s_none = $self->{space_none};
+    my $s_before = $self->{space_before};
+    my $s_after = $self->{space_after};
 
-	# copy the input array so we don't modify it
-	my $tokens = $self->parse_escape([@$intoks]);
+    # copy the input array so we don't modify it
+    my $tokens = $self->parse_escape([@$intoks]);
 
-	my $str = '';
-	my $sw = 0;	# space if space wanted after token.
-	my $sf = 0;	# space if space should be forced after token.
-	for(@$tokens) {
-		if(length == 1 && index($tchrs,$_) >= 0) {
-			if(index($s_none,$_) >= 0)   { $str .= $_;     $sw=0; next; }
-			if(index($s_before,$_) >= 0) { $str .= $sw.$_; $sw=0; next; }
-			if(index($s_after,$_) >= 0)  { $str .= $_;     $sw=1; next; }
-			# default: force space on both sides of operator.
-			$str .= " $_ "; $sw = 0; next;
-		}
-		$str .= ($sw ? ' ' : '') . $_;
-		$sw = 1;
-	}
+    my $str = '';
+    my $sw = 0; # space if space wanted after token.
+    my $sf = 0; # space if space should be forced after token.
+    for(@$tokens) {
+        if(length == 1 && index($tchrs,$_) >= 0) {
+            if(index($s_none,$_) >= 0)   { $str .= $_;     $sw=0; next; }
+            if(index($s_before,$_) >= 0) { $str .= $sw.$_; $sw=0; next; }
+            if(index($s_after,$_) >= 0)  { $str .= $_;     $sw=1; next; }
+            # default: force space on both sides of operator.
+            $str .= " $_ "; $sw = 0; next;
+        }
+        $str .= ($sw ? ' ' : '') . $_;
+        $sw = 1;
+    }
 
-	return $str;
+    return $str;
 }
 
 

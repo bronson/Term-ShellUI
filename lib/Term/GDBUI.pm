@@ -12,7 +12,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.81';
+$VERSION = '0.82';
 
 
 =head1 NAME
@@ -38,9 +38,11 @@ care of the heavy lifting.
 
 =head1 COMMAND SET
 
-A command set describes your application's entire user interface.
-It's easiest to explain with a working example.  Here are the
-commands that we will implement:
+A command set is the data structure that
+describes your application's entire user interface.
+It is simply a collection of L</COMMANDS>.
+It's easiest to illustrate with a working example.
+We shall implement the following 6 commands:
 
 =over 4
 
@@ -53,6 +55,9 @@ With no arguments, prints a list and short summary of all available commands.
 
 This is just a synonym for "help".  It is not listed in the possible
 completions because it just clutters up the list without being useful.
+Of course, pressing "h<tab><return>" will autocomplete to "help" and
+then execute the help command.  Including this command allows you to 
+simply type "h<return>".
 
 =item exists
 
@@ -69,7 +74,7 @@ and "show args".
 
 =item show args
 
-This just shows more advanced argument processing.
+This shows more advanced argument processing.
 First, it uses cusom argument completion: a static completion for the
 first argument (either "create" or "delete") and the standard
 file completion for the second.  When executed, it echoes its own command
@@ -77,15 +82,17 @@ name followed by its arguments.
 
 =item quit
 
-How to nicely quit.  Even if no quit command is supplied, Term::GDBUI
-follows Term::ReadLine's default of quitting when Control-D is pressed.
+How to nicely quit.
+Term::GDBUI also follows Term::ReadLine's default of quitting
+when Control-D is pressed.
 
 =back
 
-This code is somewhat lengthly because it intends to
-demonstrate most of Term::GDBUI's features.  You can find a working
+This code is fairly comprehensive because it attempts to
+demonstrate most of Term::GDBUI's many features.  You can find a working
 version of this exact code titled "synopsis" in the examples directory.
-For a more real-world example, see "fileman-example".
+For a more real-world example, see the fileman-example in the same
+directory.
 
  sub get_commands
  {
@@ -115,7 +122,7 @@ For a more real-world example, see "fileman-example".
              cmds => {
                  "warranty" => { proc => "You have no warranty!\n" },
                  "args" => {
-					 minargs => 2, maxargs => 2,
+                     minargs => 2, maxargs => 2,
                      args => [ sub {qw(create delete)},
                                \&Term::GDBUI::complete_files ],
                      desc => "Demonstrate method calling",
@@ -132,15 +139,18 @@ For a more real-world example, see "fileman-example".
              desc => "Quit using Fileman",
              maxargs => 0,
              meth => sub { shift->exit_requested(1); }
-		 },
+         },
      };
  }
 
 
-=head1 THE COMMAND
+=head1 COMMAND
 
-A command is just a collection of a small number of fields.
+This data structure describes a single command implemented
+by your application.
+"help", "exit", etc.
 All fields are optional.
+Commands are passed to Term::GDBUI using a L</COMMAND SET>.
 
 =over 4
 
@@ -268,14 +278,14 @@ want to use help categories, simply pass undef for the categories.
 Here is an example of how to declare a collection of help categories:
 
   my $helpcats = {
-	  breakpoints => {
-		  desc => "Commands to halt the program",
-		  cmds => qw(break tbreak delete disable enable),
-	  },
-	  data => {
-		  desc => "Commands to examine data",
-		  cmds => ['info', 'show warranty', 'show args'],
-	  }
+      breakpoints => {
+          desc => "Commands to halt the program",
+          cmds => qw(break tbreak delete disable enable),
+      },
+      data => {
+          desc => "Commands to examine data",
+          cmds => ['info', 'show warranty', 'show args'],
+      }
   };
 
 "show warranty" and "show args" on the last line above
@@ -285,10 +295,9 @@ subcommands with whitespace.
 
 =head1 CALLBACKS
 
-Callbacks are GDBUI functions that are intended to be called by
+Callbacks are functions supplied by GDBUI but intended to be called by
 your application.
-They offer assistance in implementing common functions like 'help'
-and 'history'.
+They implement common functions like 'help' and 'history'.
 
 =over 4
 
@@ -306,34 +315,34 @@ arguments:
 
 sub help_call
 {
-	my $self = shift;
-	my $cats = shift;		# help categories to use
-	my $parms = shift;		# data block passed to methods
-	my $topic = $_[0];		# topics or commands to get help on
+    my $self = shift;
+    my $cats = shift;       # help categories to use
+    my $parms = shift;      # data block passed to methods
+    my $topic = $_[0];      # topics or commands to get help on
 
-	my $cset = $parms->{cset};
-	my $OUT = $self->{OUT};
+    my $cset = $parms->{cset};
+    my $OUT = $self->{OUT};
 
-	if(defined($topic)) {
-		if(exists $cats->{$topic}) {
-			print $OUT $self->get_category_help($cats->{$topic}, $cset);
-		} else {
-			print $OUT $self->get_cmd_help(\@_, $cset);
-		}
-	} elsif(defined($cats)) {
-		# no topic -- print a list of the categories
-		print $OUT "\nHelp categories:\n\n";
-		for(sort keys(%$cats)) {
-			print $OUT $self->get_category_summary($_, $cats->{$_});
-		}
-	} else {
-		# no categories -- print a summary of all commands
-		print $OUT $self->get_all_cmd_summaries($cset);
-	}
+    if(defined($topic)) {
+        if(exists $cats->{$topic}) {
+            print $OUT $self->get_category_help($cats->{$topic}, $cset);
+        } else {
+            print $OUT $self->get_cmd_help(\@_, $cset);
+        }
+    } elsif(defined($cats)) {
+        # no topic -- print a list of the categories
+        print $OUT "\nHelp categories:\n\n";
+        for(sort keys(%$cats)) {
+            print $OUT $self->get_category_summary($_, $cats->{$_});
+        }
+    } else {
+        # no categories -- print a summary of all commands
+        print $OUT $self->get_all_cmd_summaries($cset);
+    }
 }
 
 
-=item help_args(cats, cmpl)
+=item help_args
 
 This provides argument completion for help commands.
 See the example above for how to call it.
@@ -342,39 +351,39 @@ See the example above for how to call it.
 
 sub help_args
 {
-	my $self = shift;
-	my $helpcats = shift;
-	my $cmpl = shift;
+    my $self = shift;
+    my $helpcats = shift;
+    my $cmpl = shift;
 
-	my $args = $cmpl->{'args'};
-	my $argno = $cmpl->{'argno'};
-	my $cset = $cmpl->{'cset'};
+    my $args = $cmpl->{'args'};
+    my $argno = $cmpl->{'argno'};
+    my $cset = $cmpl->{'cset'};
 
-	if($argno == 0) {
-		# return both categories and commands if we're on the first argument
-		return $self->get_cset_completions($cset, keys(%$helpcats));
-	}
+    if($argno == 0) {
+        # return both categories and commands if we're on the first argument
+        return $self->get_cset_completions($cset, keys(%$helpcats));
+    }
 
-	my($scset, $scmd, $scname, $sargs) = $self->get_deep_command($cset, $args);
+    my($scset, $scmd, $scname, $sargs) = $self->get_deep_command($cset, $args);
 
-	# without this we'd complete with $scset for all further args
-	return [] if $argno >= @$scname;
+    # without this we'd complete with $scset for all further args
+    return [] if $argno >= @$scname;
 
-	return $self->get_cset_completions($scset);
+    return $self->get_cset_completions($scset);
 }
 
 
 
-=item complete_files(cmpl, dir)
+=item complete_files
 
 Completes on filesystem objects (files, directories, etc).
 Use either
 
-  args => sub { shift->complete_files(@_)
+  args => sub { shift->complete_files(@_) },
 
 or
 
-  args => \&complete_files
+  args => \&complete_files,
 
 Starts in the current directory.
 
@@ -382,38 +391,38 @@ Starts in the current directory.
 
 sub complete_files
 {
-	my $self = shift;
-	my $cmpl = shift;
+    my $self = shift;
+    my $cmpl = shift;
 
-	$self->suppress_completion_append_character();
+    $self->suppress_completion_append_character();
 
-	use File::Spec;
-	my @path = File::Spec->splitdir($cmpl->{str} || ".");
-	my $dir = File::Spec->catdir(@path[0..$#path-1]);
+    use File::Spec;
+    my @path = File::Spec->splitdir($cmpl->{str} || ".");
+    my $dir = File::Spec->catdir(@path[0..$#path-1]);
 
-	# eradicate non-matches immediately (this is important if
-	# completing in a directory with 3000+ files)
-	my $file = $path[$#path];
-	$file = '' unless $cmpl->{str};
-	my $flen = length($file);
+    # eradicate non-matches immediately (this is important if
+    # completing in a directory with 3000+ files)
+    my $file = $path[$#path];
+    $file = '' unless $cmpl->{str};
+    my $flen = length($file);
 
-	my @files = ();
-	if(opendir(DIR, length($dir) ? $dir : '.')) {
-		@files = grep { substr($_,0,$flen) eq $file } readdir DIR;
-		closedir DIR;
-		# eradicate dotfiles unless user's file begins with a dot
-		@files = grep { /^[^.]/ } @files unless $file =~ /^\./;
-		# reformat filenames to be exactly as user typed
-		@files = map { length($dir) ? ($dir eq '/' ? "/$_" : "$dir/$_") : $_ } @files;
-	} else {
-		$self->completemsg("Couldn't read dir: $!\n");
-	}
+    my @files = ();
+    if(opendir(DIR, length($dir) ? $dir : '.')) {
+        @files = grep { substr($_,0,$flen) eq $file } readdir DIR;
+        closedir DIR;
+        # eradicate dotfiles unless user's file begins with a dot
+        @files = grep { /^[^.]/ } @files unless $file =~ /^\./;
+        # reformat filenames to be exactly as user typed
+        @files = map { length($dir) ? ($dir eq '/' ? "/$_" : "$dir/$_") : $_ } @files;
+    } else {
+        $self->completemsg("Couldn't read dir: $!\n");
+    }
 
-	return \@files;
+    return \@files;
 }
 
 
-=item complete_onlyfiles(cmpl, dir)
+=item complete_onlyfiles
 
 Like L<complete_files|/"complete_files(cmpl, dir)">
 but excludes directories, device nodes, etc.
@@ -423,21 +432,21 @@ It returns regular files only.
 
 sub complete_onlyfiles
 {
-	my $self = shift;
+    my $self = shift;
 
-	# need to do our own escaping because we want to add a space ourselves
-	$self->suppress_completion_escape();
-	my @c = grep { -f || -d } @{$self->complete_files(@_)};
-	$self->{parser}->parse_escape(\@c);
-	# append a space if we've completed a unique file
-	$c[0] .= (-f($c[0]) ? ' ' : '') if @c == 1;
-	# append a helpful slash to indicate directories
-	@c = map { -d($_) ? "$_/" : $_ } @c;
-	return \@c;
+    # need to do our own escaping because we want to add a space ourselves
+    $self->suppress_completion_escape();
+    my @c = grep { -f || -d } @{$self->complete_files(@_)};
+    $self->{parser}->parse_escape(\@c);
+    # append a space if we've completed a unique file
+    $c[0] .= (-f($c[0]) ? ' ' : '') if @c == 1;
+    # append a helpful slash to indicate directories
+    @c = map { -d($_) ? "$_/" : $_ } @c;
+    return \@c;
 }
 
 
-=item complete_onlydirs(cmpl, dir)
+=item complete_onlydirs
 
 Like L<complete_files|/"complete_files(cmpl, dir)">,
 but excludes files, device nodes, etc.
@@ -445,16 +454,16 @@ It returns only directories.
 It I<does> return the . and .. special directories so you'll need
 to remove those manually if you don't want to see them:
 
-  return grep { !/^\.?\.$/ } complete_onlydirs(@_);
+  args = sub { grep { !/^\.?\.$/ } complete_onlydirs(@_) },
 
 =cut
 
 sub complete_onlydirs
 {
-	my $self = shift;
-	my @c = grep { -d } @{$self->complete_files(@_)};
-	$c[0] .= '/' if @c == 1;	# add a slash if it's a unique match
-	return \@c;
+    my $self = shift;
+    my @c = grep { -d } @{$self->complete_files(@_)};
+    $c[0] .= '/' if @c == 1;    # add a slash if it's a unique match
+    return \@c;
 }
 
 
@@ -467,62 +476,66 @@ is run any time you enter an unrecognized command, it will be
 called to perform completion (unless you actually do have commands
 that begin with a bang).
 
-Here's an example of a default command that provides history
-completion and nothing else:
+Here's an example of how you would add history completion to
+your command set:
 
+  my $cset = {
      "" => { args => sub { shift->complete_history(@_) } },
+     # ... more commands go here
+  };
 
 To watch this in action, run your app, type a bang and then a tab ("!<tab>").
 
-There is one catch: if you use completion, be sure to enter the ENTIRE
+There is one catch: if you start using completion, be sure to enter the ENTIRE
 command.  If you enter a partial command, Readline will unfortunately stop
 looking for the match after just the first word (usually the command
 name).  This means that if you want to run "!abc def ghi", Readline will
 execute the first command that begins with "abc", even though you
-completed past that.  Entering the entire command works around this
-limitation.  (If Readline actually supported
+may have specified another command.
+Entering the entire command works around this
+limitation.  (If Readline properly supported
 $term->Attribs->{history_word_delimiters}='\n',
-this limitation could go away).
+this limitation would go away).
 
 =cut
 
 sub complete_history
 {
-	my $self = shift;
-	my $cmpl = shift;
+    my $self = shift;
+    my $cmpl = shift;
 
-	return undef if $self->{disable_history_expansion};
+    return undef if $self->{disable_history_expansion};
 
-	# it's not a history command unless it starts with a bang.
-	#return undef unless $cmpl->{tokno} < @{$cmpl->{cname}};
-	return undef unless substr($cmpl->{tokens}->[0], 0, 1) eq '!';
+    # it's not a history command unless it starts with a bang.
+    #return undef unless $cmpl->{tokno} < @{$cmpl->{cname}};
+    return undef unless substr($cmpl->{tokens}->[0], 0, 1) eq '!';
 
-	return undef unless $self->{term}->can('GetHistory');
-	my @history = $self->{term}->GetHistory();
-	return [] unless(@history);
-	
-	my %seen = ();	# uniq history
-	@history = grep { !$seen{$_}++ } @history;
+    return undef unless $self->{term}->can('GetHistory');
+    my @history = $self->{term}->GetHistory();
+    return [] unless(@history);
+    
+    my %seen = ();  # uniq history
+    @history = grep { !$seen{$_}++ } @history;
 
-	# remove items that start with the wrong text
-	my $str = substr($cmpl->{rawline}, 1, $cmpl->{rawcursor}-1);
-	my $strlen = length($str);
-	@history = grep { substr($_,0,$strlen) eq $str } @history;
+    # remove items that start with the wrong text
+    my $str = substr($cmpl->{rawline}, 1, $cmpl->{rawcursor}-1);
+    my $strlen = length($str);
+    @history = grep { substr($_,0,$strlen) eq $str } @history;
 
-	# trim all tokens except for the one we're trying to complete
-	# (no need to do this for the first token -- just the rest)
-	if($cmpl->{tokno} > 0) {
-		my $rawstart = $cmpl->{rawstart} - 1;	# no bang so -1
-		@history = map { substr($_, $rawstart) } @history;
-	}
+    # trim all tokens except for the one we're trying to complete
+    # (no need to do this for the first token -- just the rest)
+    if($cmpl->{tokno} > 0) {
+        my $rawstart = $cmpl->{rawstart} - 1;   # no bang so -1
+        @history = map { substr($_, $rawstart) } @history;
+    }
 
-	# put a bang on the front if it's the first token
-	@history = map { "!$_" } @history if $cmpl->{tokno} == 0;
+    # put a bang on the front if it's the first token
+    @history = map { "!$_" } @history if $cmpl->{tokno} == 0;
 
-	# otherwise the commands would be modified
-	$self->suppress_completion_escape();
+    # otherwise the commands would be modified
+    $self->suppress_completion_escape();
 
-	return \@history;
+    return \@history;
 }
 
 
@@ -532,7 +545,7 @@ You can use this callback to implement the standard bash
 history command.  This command supports:
 
     NUM       display last N history items
-	          (displays all history if N is omitted)
+              (displays all history if N is omitted)
     -c        clear all history
     -d NUM    delete an item from the history
 
@@ -550,52 +563,52 @@ Add it to your command set using something like this:
 
 sub history_call
 {
-	my $self = shift;
-	my $parms = shift;
-	my $arg = shift;
+    my $self = shift;
+    my $parms = shift;
+    my $arg = shift;
 
-	# clear history?
-	if($arg && $arg eq '-c') {
-		$self->{term}->clear_history();
-		return;
-	}
-	if($arg && $arg eq '-d') {
-		@_ or die "Need the indexes of the items to delete.\n";
-		for(@_) {
-			/^\d+$/ or die "'$_' needs to be numeric.\n";
-			# function is autoloaded so we can't use can('remove_history')
-			# to see if it exists.  So, we'll eval it and pray...
-			eval { $self->{term}->remove_history($_); }
-		}
-		return;
-	}
+    # clear history?
+    if($arg && $arg eq '-c') {
+        $self->{term}->clear_history();
+        return;
+    }
+    if($arg && $arg eq '-d') {
+        @_ or die "Need the indexes of the items to delete.\n";
+        for(@_) {
+            /^\d+$/ or die "'$_' needs to be numeric.\n";
+            # function is autoloaded so we can't use can('remove_history')
+            # to see if it exists.  So, we'll eval it and pray...
+            eval { $self->{term}->remove_history($_); }
+        }
+        return;
+    }
 
-	# number of lines to print (push maximum onto args if no arg supplied)
-	my $num = -1;
-	if($arg && $arg =~ /^(\d+)$/) {
-		$num = $1;
-		$arg = undef;
-	}
-	push @_, $arg if $arg;
+    # number of lines to print (push maximum onto args if no arg supplied)
+    my $num = -1;
+    if($arg && $arg =~ /^(\d+)$/) {
+        $num = $1;
+        $arg = undef;
+    }
+    push @_, $arg if $arg;
 
-	die "Unknown argument" . (@_==1?'':'s') . ": '" .
-		join("', '", @_) . "'\n" if @_;
+    die "Unknown argument" . (@_==1?'':'s') . ": '" .
+        join("', '", @_) . "'\n" if @_;
 
-	die "Your readline lib doesn't support history!\n"
-		unless $self->{term}->can('GetHistory');
+    die "Your readline lib doesn't support history!\n"
+        unless $self->{term}->can('GetHistory');
 
-	# argh, this has evolved badly...  seems to work though.
-	my @history = $self->{term}->GetHistory();
-	my $where = @history;
-	$num = @history if $num == -1 || $num > @history;
-	@history = @history[@history-$num..$#history];
-	$where = $self->{term}->where_history()
-		if $self->{term}->can('where_history');
-	my $i = $where - @history;
-	for(@history) {
-		print "$i: $_\n";
-		$i += 1;
-	}
+    # argh, this has evolved badly...  seems to work though.
+    my @history = $self->{term}->GetHistory();
+    my $where = @history;
+    $num = @history if $num == -1 || $num > @history;
+    @history = @history[@history-$num..$#history];
+    $where = $self->{term}->where_history()
+        if $self->{term}->can('where_history');
+    my $i = $where - @history;
+    for(@history) {
+        print "$i: $_\n";
+        $i += 1;
+    }
 }
 
 
@@ -603,9 +616,11 @@ sub history_call
 
 =head1 METHODS
 
-These are the methods that your application may need to call.
-Usually you simply call new() and then run().  You would only
-need to read this section if you wanted to do something out
+These are the routines that your application calls to create
+and use a Term::GDBUI object.
+Usually you simply call new() and then run() -- everything else
+is handled automatically.
+You only need to read this section if you wanted to do something out
 of the ordinary.
 
 =over 4
@@ -622,6 +637,13 @@ It accepts the following named parameters:
 
 The name of this application (will be passed to L<Term::ReadLine/new>).
 Defaults to $0, the name of the current executable.
+
+=item term
+
+Usually Term::GDBUI uses its own Term::ReadLine object
+(created with C<new Term::ReadLine $args{'app'}>).  However, if
+you can create a new Term::ReadLine object yourself and
+supply it using the term argument.
 
 =item blank_repeats_cmd
 
@@ -676,6 +698,14 @@ This is the prompt that should be displayed for every request.
 It can be changed at any time using the L</prompt> method.
 The default is "$0> " (see L<app> above).
 
+If you specify a code reference, then the coderef is executed and
+its return value is set as the prompt.  A single argument is passed
+to the coderef: the Term::GDBUI object.  For example, the following
+line sets the prompt to "## > " where ## is the current number of history
+items.
+
+    $term->prompt(sub { $term->{term}->GetHistory() . " > " });
+
 =item token_chars
 
 This argument specifies the characters that should be considered
@@ -708,59 +738,59 @@ L<Term::ReadLine/ornaments>.
 
 sub new
 {
-	my $type = shift;
-	my %args = (
-		app => $0,
-		prompt => "$0> ",
-		commands => undef,
-		blank_repeats_cmd => 0,
-		history_file => undef,
-		history_max => 500,
-		token_chars => '',
-		keep_quotes => 0,
-		debug_complete => 0,
-		disable_history_expansion => 0,
-		display_summary_in_help => 1,
-		@_
-	);
+    my $type = shift;
+    my %args = (
+        app => $0,
+        prompt => "$0> ",
+        commands => undef,
+        blank_repeats_cmd => 0,
+        history_file => undef,
+        history_max => 500,
+        token_chars => '',
+        keep_quotes => 0,
+        debug_complete => 0,
+        disable_history_expansion => 0,
+        display_summary_in_help => 1,
+        @_
+    );
 
-	my $self = {};
-	bless $self, $type;
+    my $self = {};
+    bless $self, $type;
 
-	$self->{done} = 0;
+    $self->{done} = 0;
 
-	$self->{parser} = Text::Shellwords::Cursor->new(
-		token_chars => $args{token_chars},
-		keep_quotes => $args{keep_quotes},
-		debug => 0,
-		error => sub { shift; $self->error(@_); },
-		);
+    $self->{parser} = Text::Shellwords::Cursor->new(
+        token_chars => $args{token_chars},
+        keep_quotes => $args{keep_quotes},
+        debug => 0,
+        error => sub { shift; $self->error(@_); },
+        );
 
-	# expand tildes in the history file
-	if($args{history_file}) {
-		$args{history_file} =~ s/^~([^\/]*)/$1?(getpwnam($1))[7]:
-			$ENV{HOME}||$ENV{LOGDIR}||(getpwuid($>))[7]/e;
-	}
+    # expand tildes in the history file
+    if($args{history_file}) {
+        $args{history_file} =~ s/^~([^\/]*)/$1?(getpwnam($1))[7]:
+            $ENV{HOME}||$ENV{LOGDIR}||(getpwuid($>))[7]/e;
+    }
 
-	for(keys %args) {
-		next if $_ eq 'app';	# this param is not a member
-		$self->{$_} = $args{$_};
-	}
+    for(keys %args) {
+        next if $_ eq 'app';    # this param is not a member
+        $self->{$_} = $args{$_};
+    }
 
-	$self->{term} = new Term::ReadLine $args{'app'};
-	$self->{term}->ornaments(0);	# turn off decoration by default
-	$self->{term}->MinLine(0);	# manually call AddHistory
+    $self->{term} ||= new Term::ReadLine($args{'app'});
+    $self->{term}->ornaments(0);    # turn off decoration by default
+    $self->{term}->MinLine(0);  # manually call AddHistory
 
-	my $attrs = $self->{term}->Attribs;
+    my $attrs = $self->{term}->Attribs;
 # there appear to be catastrophic bugs with history_word_delimiters
 # it goes into an infinite loop when =,[] are in token_chars
-	# $attrs->{history_word_delimiters} = " \t\n".$self->{token_chars};
-	$attrs->{completion_function} = sub { completion_function($self, @_); };
+    # $attrs->{history_word_delimiters} = " \t\n".$self->{token_chars};
+    $attrs->{completion_function} = sub { completion_function($self, @_); };
 
-	$self->{OUT} = $self->{term}->OUT || \*STDOUT;
-	$self->{prevcmd} = "";	# cmd to run again if user hits return
+    $self->{OUT} = $self->{term}->OUT || \*STDOUT;
+    $self->{prevcmd} = "";  # cmd to run again if user hits return
 
-	return $self;
+    return $self;
 }
 
 
@@ -773,113 +803,115 @@ Returns undef if no command was called.
 
 sub process_a_cmd
 {
-	my $self = shift;
+    my $self = shift;
 
-	$self->{completeline} = "";
+    $self->{completeline} = "";
 
-	my $rawline = $self->{term}->readline($self->prompt());
+    my $prompt = $self->prompt();
+    $prompt = $prompt->($self) if ref $prompt eq 'CODE';
+    my $rawline = $self->{term}->readline($prompt);
 
-	my $OUT = $self->{'OUT'};
+    my $OUT = $self->{'OUT'};
 
-	# EOF exits
-	unless(defined $rawline) {
-		print $OUT "\n";
-		$self->exit_requested(1);
-		return undef;
-	}
+    # EOF exits
+    unless(defined $rawline) {
+        print $OUT "\n";
+        $self->exit_requested(1);
+        return undef;
+    }
 
-	# is it a blank line?
-	if($rawline =~ /^\s*$/) {
-		$rawline = $self->blank_line();
-		return unless defined $rawline && $rawline !~ /^\s*$/;
-	}
+    # is it a blank line?
+    if($rawline =~ /^\s*$/) {
+        $rawline = $self->blank_line();
+        return unless defined $rawline && $rawline !~ /^\s*$/;
+    }
 
-	my $tokens;
-	my $expcode = 0;
-	if($rawline =~ /^\s*[!^]/ && !$self->{disable_history_expansion}) {
-		# check to see if this exact command is in the history.
-		# if so, user used history completion to enter it and therefore we
-		# won't subject it to history substitution.
-		my $match;
-		if($self->{term}->can('GetHistory')) {
-			my @history = $self->{term}->GetHistory();
-			# reformat line as it will appear in history
-			($tokens) = $self->{parser}->parse_line(substr($rawline,1), messages=>1);
-			if($tokens) {
-				my $rawl = $self->{parser}->join_line($tokens);
-				$match = grep { $_ eq $rawl } @history;
-			}
-		}
+    my $tokens;
+    my $expcode = 0;
+    if($rawline =~ /^\s*[!^]/ && !$self->{disable_history_expansion}) {
+        # check to see if this exact command is in the history.
+        # if so, user used history completion to enter it and therefore we
+        # won't subject it to history substitution.
+        my $match;
+        if($self->{term}->can('GetHistory')) {
+            my @history = $self->{term}->GetHistory();
+            # reformat line as it will appear in history
+            ($tokens) = $self->{parser}->parse_line(substr($rawline,1), messages=>1);
+            if($tokens) {
+                my $rawl = $self->{parser}->join_line($tokens);
+                $match = grep { $_ eq $rawl } @history;
+            }
+        }
 
-		if(!$match) {
-			$tokens = undef;	# need to re-parse the expanded line
-			# otherwise, we subject the line to history expansion
-			# $self->{term}->can('history_expand') returns false???
-			# it's probably autoloaded dammit -- dunno what to do about that.
-			($expcode, $rawline) = $self->{term}->history_expand($rawline);
-			if($expcode == -1) {
-				$self->error($rawline."\n");
-				return undef;
-			}
-		}
-	}
+        if(!$match) {
+            $tokens = undef;    # need to re-parse the expanded line
+            # otherwise, we subject the line to history expansion
+            # $self->{term}->can('history_expand') returns false???
+            # it's probably autoloaded dammit -- dunno what to do about that.
+            ($expcode, $rawline) = $self->{term}->history_expand($rawline);
+            if($expcode == -1) {
+                $self->error($rawline."\n");
+                return undef;
+            }
+        }
+    }
 
-	my $retval = undef;
-	my $str = $rawline;
+    my $retval = undef;
+    my $str = $rawline;
 
-	# parse the line unless it was already parsed as part of history expansion
-	($tokens) = $self->{parser}->parse_line($rawline, messages=>1) unless $tokens;
+    # parse the line unless it was already parsed as part of history expansion
+    ($tokens) = $self->{parser}->parse_line($rawline, messages=>1) unless $tokens;
 
-	if(defined $tokens) {
-		$str = $self->{parser}->join_line($tokens);
-		if($expcode == 2) {
-			# user did an expansion that asked to be printed only
-			print $OUT "$str\n";
-		} else {
-			print $OUT "$str\n" if $expcode == 1;
+    if(defined $tokens) {
+        $str = $self->{parser}->join_line($tokens);
+        if($expcode == 2) {
+            # user did an expansion that asked to be printed only
+            print $OUT "$str\n";
+        } else {
+            print $OUT "$str\n" if $expcode == 1;
 
-			my($cset, $cmd, $cname, $args) = $self->get_deep_command($self->commands(), $tokens);
+            my($cset, $cmd, $cname, $args) = $self->get_deep_command($self->commands(), $tokens);
 
-			# this is a subset of the cmpl data structure
-			my $parms = {
-				cset => $cset,
-				cmd => $cmd,
-				cname => $cname,
-				args => $args,
-				tokens => $tokens,
-				rawline => $rawline,
-			};
+            # this is a subset of the cmpl data structure
+            my $parms = {
+                cset => $cset,
+                cmd => $cmd,
+                cname => $cname,
+                args => $args,
+                tokens => $tokens,
+                rawline => $rawline,
+            };
 
-			$retval = $self->call_command($parms);
-		}
-	}
+            $retval = $self->call_command($parms);
+        }
+    }
 
-	# Add to history unless it's a dupe of the previous command.
-	$self->{term}->addhistory($str) if $str ne $self->{prevcmd};
-	$self->{prevcmd} = $str;
+    # Add to history unless it's a dupe of the previous command.
+    $self->{term}->addhistory($str) if $str ne $self->{prevcmd};
+    $self->{prevcmd} = $str;
 
-	return $retval;
+    return $retval;
 }
 
 
 =item run()
 
 The main loop.  Processes all commands until someone calls
-C<L<exit_requested/"exit_requested(exitflag)">(true)>.
+C<L</"exit_requested(exitflag)"|exit_requested>(true)>.
 
 =cut
 
 sub run
 {
-	my $self = shift;
+    my $self = shift;
 
-	$self->load_history();
+    $self->load_history();
 
-	while(!$self->{done}) {
-		$self->process_a_cmd();
-	}
+    while(!$self->{done}) {
+        $self->process_a_cmd();
+    }
 
-	$self->save_history();
+    $self->save_history();
 }
 
 
@@ -889,13 +921,13 @@ sub run
 
 sub getset
 {
-	my $self = shift;
-	my $field = shift;
-	my $new = shift;  # optional
+    my $self = shift;
+    my $field = shift;
+    my $new = shift;  # optional
 
-	my $old = $self->{$field};
-	$self->{$field} = $new if defined $new;
-	return $old;
+    my $old = $self->{$field};
+    $self->{$field} = $new if defined $new;
+    return $old;
 }
 
 
@@ -930,13 +962,13 @@ It silently replaces any commands that have the same name.
 
 sub add_commands
 {
-	my $self = shift;
-	my $cmds = shift;
+    my $self = shift;
+    my $cmds = shift;
 
-	my $cset = $self->commands() || {};
-	for (keys %$cmds) {
-		$cset->{$_} = $cmds->{$_};
-	}
+    my $cset = $self->commands() || {};
+    for (keys %$cmds) {
+        $cset->{$_} = $cmds->{$_};
+    }
 }
 
 =item exit_requested(exitflag)
@@ -963,10 +995,10 @@ This function exists only to ensure that we do this consistently.
 
 sub get_cname
 {
-	my $self = shift;
-	my $cname = shift;
+    my $self = shift;
+    my $cname = shift;
 
-	return join(" ", @$cname);
+    return join(" ", @$cname);
 }
 
 
@@ -990,15 +1022,15 @@ command.  Override this method to supply your own behavior.
 
 sub blank_line
 {
-	my $self = shift;
+    my $self = shift;
 
-	if($self->{blank_repeats_cmd}) {
-		my $OUT = $self->{OUT};
-		print $OUT $self->{prevcmd}, "\n";
-		return $self->{prevcmd};
-	}
+    if($self->{blank_repeats_cmd}) {
+        my $OUT = $self->{OUT};
+        print $OUT $self->{prevcmd}, "\n";
+        return $self->{prevcmd};
+    }
 
-	return undef;
+    return undef;
 }
 
 
@@ -1006,33 +1038,34 @@ sub blank_line
 
 Called when an error occurrs.  By default, the routine simply
 prints the msg to stderr.  Override it to change this behavior.
-
-     $self->error("Oh no!  That was terrible!\n");
+It takes any number of arguments, cocatenates them together and
+prints them to stderr.
 
 =cut
 
 sub error
 {
-	my $self = shift;
-	print STDERR @_;
+    my $self = shift;
+    print STDERR @_;
 }
 
 
 
 =head1 WRITING A COMPLETION ROUTINE
 
-Writing a completion routines is a notoriously difficult task.
-Luckily, Term::GDBUI goes out of its way to make it as easy
+Term::ReadLine makes writing a completion routine a
+notoriously difficult task.
+Term::GDBUI goes out of its way to make it as easy
 as possible.  The best way to write a completion routine
 is to start with one that already does something similar to
-what you want (see the L<CALLBACKS> section for the completion
-routines that come with GDBUI).  Set $term->{debug_complete}=5
-to see what sort of information your completion routine has
-at its disposal.
+what you want (see the L</CALLBACKS> section for the completion
+routines that come with GDBUI).
 
 Your routine returns either an arrayref of possible completions
 or undef if an error prevented any completions from being generated.
 Return an empty array if there are simply no applicable competions.
+Be careful; the distinction between no completions and an error
+can be significant.
 
 Your routine takes two arguments: a reference to the GDBUI
 object and cmpl, a data structure that contains all the information you need
@@ -1132,12 +1165,12 @@ the cursor will no longer be displayed in the correct position.
 
 sub completemsg
 {
-	my $self = shift;
-	my $msg = shift;
+    my $self = shift;
+    my $msg = shift;
 
-	my $OUT = $self->{OUT};
-	print $OUT $msg;
-	$self->{term}->rl_on_new_line();
+    my $OUT = $self->{OUT};
+    print $OUT $msg;
+    $self->{term}->rl_on_new_line();
 }
 
 
@@ -1158,23 +1191,23 @@ completions that it returns.
 
 sub suppress_completion_append_character
 {
-	shift->{term}->Attribs->{completion_suppress_append} = 1;
+    shift->{term}->Attribs->{completion_suppress_append} = 1;
 }
 
 =item suppress_completion_escape()
 
 Normally everything returned by your completion routine
-is escaped so that it don't get destroyed by shell metacharacter
+is escaped so that it doesn't get destroyed by shell metacharacter
 interpretation (quotes, backslashes, etc).  To avoid escaping
-twice (disastrous), completion routines that do their own escaping
-(using L<Text::Shellwords::Cursor::parse_escape>)
-must call suppress_completion_escape every time they is called.
+twice (disastrous), a completion routine that does its own escaping
+(perhaps using L<Text::Shellwords::Cursor>parse_escape)
+must call suppress_completion_escape every time is called.
 
 =cut
 
 sub suppress_completion_escape
 {
-	shift->{suppress_completion_escape} = 1;
+    shift->{suppress_completion_escape} = 1;
 }
 
 
@@ -1183,20 +1216,22 @@ sub suppress_completion_escape
 If all the completions returned by your completion routine should be
 enclosed in single or double quotes, call force_to_string on them.
 You will most likely need this routine if L<keep_quotes> is 1.
+This is useful when completing a construct that you know must
+always be quoted.
 
 force_to_string surrounds all completions with the quotes supplied by the user
 or, if the user didn't supply any quotes, the quote passed in default_quote.
 If the programmer didn't supply a default_quote and the user didn't start
 the token with an open quote, then force_to_string won't change anything.
 
-Here's how to use it to force strins around two possible completions,
+Here's how to use it to force strings on two possible completions,
 aaa and bbb.  If the user doesn't supply any quotes, the completions
 will be surrounded by double quotes.
 
      args => sub { shift->force_to_string(@_,['aaa','bbb'],'"') },
 
 Calling force_to_string escapes your completions (unless your callback
-called suppress_completion_escape itself), then calls
+calls suppress_completion_escape itself), then calls
 suppress_completion_escape to ensure the final quote isn't mangled.
 
 =cut
@@ -1208,19 +1243,19 @@ sub force_to_string
     my $results = shift;
     my $bq = shift;      # optional: this is the default quote to use if none
 
-	my $fq = $bq;
+    my $fq = $bq;
     my $try = substr($cmpl->{rawline}, $cmpl->{rawstart}-1, 1);
-	if($try eq '"' || $try eq "'") {
-		$fq = '';
-		$bq = $try;
-	}
+    if($try eq '"' || $try eq "'") {
+        $fq = '';
+        $bq = $try;
+    }
 
     if($bq) {
-		$self->{parser}->parse_escape($results) unless $self->{suppress_completion_escape};
+        $self->{parser}->parse_escape($results) unless $self->{suppress_completion_escape};
         for(@$results) {
             $_ = "$fq$_$bq";
         }
-		$self->suppress_completion_escape();
+        $self->suppress_completion_escape();
     }
 
     return $results;
@@ -1228,7 +1263,7 @@ sub force_to_string
 
 =head1 INTERNALS
 
-These commands are meant to be internal to GDBUI.
+These commands are internal to GDBUI.
 They are documented here only for completeness -- you
 should never need to call them.
 
@@ -1238,8 +1273,8 @@ Looks up the supplied command line in a command hash.
 Follows all synonyms and subcommands.
 Returns undef if the command could not be found.
 
-	my($cset, $cmd, $cname, $args) =
-		$self->get_deep_command($self->commands(), $tokens);
+    my($cset, $cmd, $cname, $args) =
+        $self->get_deep_command($self->commands(), $tokens);
 
 This call takes two arguments:
 
@@ -1287,46 +1322,46 @@ command is found).
 
 sub get_deep_command
 {
-	my $self = shift;
-	my $cset = shift;
-	my $tokens = shift;
-	my $curtok = shift || 0;	# points to the command name
+    my $self = shift;
+    my $cset = shift;
+    my $tokens = shift;
+    my $curtok = shift || 0;    # points to the command name
 
-	#print "DBG get_deep_cmd: $#$tokens tokens: '" . join("', '", @$tokens) . "'\n";
-	#print "DBG cset: (" . join(", ", keys %$cset) . ")\n";
+    #print "DBG get_deep_cmd: $#$tokens tokens: '" . join("', '", @$tokens) . "'\n";
+    #print "DBG cset: (" . join(", ", keys %$cset) . ")\n";
 
-	my $name = $tokens->[$curtok];
+    my $name = $tokens->[$curtok];
 
-	# loop through all synonyms to find the actual command
-	while(exists($cset->{$name}) && exists($cset->{$name}->{'syn'})) {
-		$name = $cset->{$name}->{'syn'};
-	}
+    # loop through all synonyms to find the actual command
+    while(exists($cset->{$name}) && exists($cset->{$name}->{'syn'})) {
+        $name = $cset->{$name}->{'syn'};
+    }
 
-	my $cmd = $cset->{$name};
+    my $cmd = $cset->{$name};
 
-	# update the tokens with the actual name of this command
-	$tokens->[$curtok] = $name;
+    # update the tokens with the actual name of this command
+    $tokens->[$curtok] = $name;
 
-	# should we recurse into subcommands?
-	#print "$cmd  " . exists($cmd->{'subcmds'}) . "  (" . join(",", keys %$cmd) . ")   $curtok < $#$tokens\n";
-	if($cmd && exists($cmd->{cmds}) && $curtok < $#$tokens) {
-		#print "doing subcmd\n";
-		my $subname = $tokens->[$curtok+1];
-		my $subcmds = $cmd->{cmds};
-		return $self->get_deep_command($subcmds, $tokens, $curtok+1);
-	}
+    # should we recurse into subcommands?
+    #print "$cmd  " . exists($cmd->{'subcmds'}) . "  (" . join(",", keys %$cmd) . ")   $curtok < $#$tokens\n";
+    if($cmd && exists($cmd->{cmds}) && $curtok < $#$tokens) {
+        #print "doing subcmd\n";
+        my $subname = $tokens->[$curtok+1];
+        my $subcmds = $cmd->{cmds};
+        return $self->get_deep_command($subcmds, $tokens, $curtok+1);
+    }
 
-	#print "DBG splitting (" . join(",",@$tokens) . ") at curtok=$curtok\n";
+    #print "DBG splitting (" . join(",",@$tokens) . ") at curtok=$curtok\n";
 
-	# split deep command name and its arguments into separate lists
-	my @cname = @$tokens;
-	my @args = ($#cname > $curtok ? splice(@cname, $curtok+1) : ());
+    # split deep command name and its arguments into separate lists
+    my @cname = @$tokens;
+    my @args = ($#cname > $curtok ? splice(@cname, $curtok+1) : ());
 
-	#print "DBG tokens (" . join(",",@$tokens) . ")\n";
-	#print "DBG cname (" . join(",",@cname) . ")\n";
-	#print "DBG args (" . join(",",@args) . ")\n";
+    #print "DBG tokens (" . join(",",@$tokens) . ")\n";
+    #print "DBG cname (" . join(",",@cname) . ")\n";
+    #print "DBG args (" . join(",",@args) . ")\n";
 
-	return ($cset, $cmd, \@cname, \@args);
+    return ($cset, $cmd, \@cname, \@args);
 }
 
 
@@ -1339,14 +1374,14 @@ for completing.
 
 sub get_cset_completions
 {
-	my $self = shift;
-	my $cset = shift;
+    my $self = shift;
+    my $cset = shift;
 
-	# return all commands that aren't exluded from the completion
-	# also exclude the default command ''.
-	my @c = grep {$_ ne '' && !exists $cset->{$_}->{exclude_from_completion}} keys(%$cset);
+    # return all commands that aren't exluded from the completion
+    # also exclude the default command ''.
+    my @c = grep {$_ ne '' && !exists $cset->{$_}->{exclude_from_completion}} keys(%$cset);
 
-	return \@c;
+    return \@c;
 }
 
 
@@ -1360,45 +1395,45 @@ flexibility).  Called by complete().
 
 sub call_args
 {
-	my $self = shift;
-	my $cmpl = shift;
+    my $self = shift;
+    my $cmpl = shift;
 
-	my $cmd = $cmpl->{cmd};
+    my $cmd = $cmpl->{cmd};
 
-	my $retval;
-	if(exists($cmd->{args})) {
-		if(ref($cmd->{args}) eq 'CODE') {
-			$retval = eval { &{$cmd->{args}}($self, $cmpl) };
-			$self->completemsg($@) if $@;
-		} elsif(ref($cmd->{args}) eq 'ARRAY') {
-			# each element in array is a string describing corresponding argument
-			my $args = $cmd->{args};
-			my $argno = $cmpl->{argno};
-			# repeat last arg indefinitely (use maxargs to stop)
-			$argno = $#$args if $#$args < $argno;
-			my $arg = $args->[$argno];
-			if(defined $arg) {
-				if(ref($arg) eq 'CODE') {
-					# it's a routine to call for this particular arg
-					$retval = eval { &$arg($self, $cmpl) };
-					$self->completemsg($@) if $@;
-				} elsif(ref($arg) eq 'ARRAY') {
-					# it's an array of possible completions
-					$retval = @$arg;
-				} else {
-					# it's a string reiminder of what this arg is meant to be
-					$self->completemsg("$arg\n") if $cmpl->{twice};
-				}
-			}
-		} elsif(ref($cmd->{args}) eq 'HASH') {
-			# not supported yet!  (if ever...)
-		} else {
-			# this must be a string describing all arguments.
-			$self->completemsg($cmd->{args} . "\n") if $cmpl->{twice};
-		}
-	}
+    my $retval;
+    if(exists($cmd->{args})) {
+        if(ref($cmd->{args}) eq 'CODE') {
+            $retval = eval { &{$cmd->{args}}($self, $cmpl) };
+            $self->completemsg($@) if $@;
+        } elsif(ref($cmd->{args}) eq 'ARRAY') {
+            # each element in array is a string describing corresponding argument
+            my $args = $cmd->{args};
+            my $argno = $cmpl->{argno};
+            # repeat last arg indefinitely (use maxargs to stop)
+            $argno = $#$args if $#$args < $argno;
+            my $arg = $args->[$argno];
+            if(defined $arg) {
+                if(ref($arg) eq 'CODE') {
+                    # it's a routine to call for this particular arg
+                    $retval = eval { &$arg($self, $cmpl) };
+                    $self->completemsg($@) if $@;
+                } elsif(ref($arg) eq 'ARRAY') {
+                    # it's an array of possible completions
+                    $retval = @$arg;
+                } else {
+                    # it's a string reiminder of what this arg is meant to be
+                    $self->completemsg("$arg\n") if $cmpl->{twice};
+                }
+            }
+        } elsif(ref($cmd->{args}) eq 'HASH') {
+            # not supported yet!  (if ever...)
+        } else {
+            # this must be a string describing all arguments.
+            $self->completemsg($cmd->{args} . "\n") if $cmpl->{twice};
+        }
+    }
 
-	return $retval;
+    return $retval;
 }
 
 =item complete
@@ -1417,35 +1452,37 @@ L<call_cmd|/call_cmd(parms)> as well.
 
 sub complete
 {
-	my $self = shift;
-	my $cmpl = shift;
+    my $self = shift;
+    my $cmpl = shift;
 
-	my $cset = $cmpl->{cset};
-	my $cmd = $cmpl->{cmd};
+    my $cset = $cmpl->{cset};
+    my $cmd = $cmpl->{cmd};
 
-	my $cr;
-	if($cmpl->{tokno} < @{$cmpl->{cname}}) {
-		# if we're still in the command, return possible command completions
-		# make sure to still call the default arg handler of course
-		$cr = $self->get_cset_completions($cset);
-	}
+    my $cr;
+    if($cmpl->{tokno} < @{$cmpl->{cname}}) {
+        # if we're still in the command, return possible command completions
+        # make sure to still call the default arg handler of course
+        $cr = $self->get_cset_completions($cset);
+        # fix suggested by Erick Calder
+        $cr = [ grep {/^$cmpl->{str}/ && $_} @$cr ];
+    }
 
-	if($cr || !defined $cmd) {
-		# call default argument handler if it exists
-		if(exists $cset->{''}) {
-			my %c2 = %$cmpl;
-			$c2{cmd} = $cset->{''};
-			my $r2 = $self->call_args(\%c2);
-			push @$cr, @$r2 if $r2;
-		}
-		return $cr;
-	}
+    if($cr || !defined $cmd) {
+        # call default argument handler if it exists
+        if(exists $cset->{''}) {
+            my %c2 = %$cmpl;
+            $c2{cmd} = $cset->{''};
+            my $r2 = $self->call_args(\%c2);
+            push @$cr, @$r2 if $r2;
+        }
+        return $cr;
+    }
 
-	# don't complete if user has gone past max # of args
-	return () if exists($cmd->{maxargs}) && $cmpl->{argno} >= $cmd->{maxargs};
+    # don't complete if user has gone past max # of args
+    return () if exists($cmd->{maxargs}) && $cmpl->{argno} >= $cmd->{maxargs};
 
-	# everything checks out -- call the command's argument handler
-	return $self->call_args($cmpl);
+    # everything checks out -- call the command's argument handler
+    return $self->call_args($cmpl);
 }
 
 
@@ -1470,97 +1507,97 @@ See the L<Term::ReadLine> documentation for a description of the arguments.
 
 sub completion_function
 {
-	my $self = shift;
-	my $text = shift;	# the word directly to the left of the cursor
-	my $line = shift;	# the entire line
-	my $start = shift;	# the position in the line of the beginning of $text
+    my $self = shift;
+    my $text = shift;   # the word directly to the left of the cursor
+    my $line = shift;   # the entire line
+    my $start = shift;  # the position in the line of the beginning of $text
 
-	my $cursor = $start + length($text);
+    my $cursor = $start + length($text);
 
-	# reset the suppress_append flag
-	# completion routine must set it every time it's called
-	$self->{term}->Attribs->{completion_suppress_append} = 0;
-	$self->{suppress_completion_escape} = 0;
+    # reset the suppress_append flag
+    # completion routine must set it every time it's called
+    $self->{term}->Attribs->{completion_suppress_append} = 0;
+    $self->{suppress_completion_escape} = 0;
 
-	# Twice is true if the user has hit tab twice on the same string
-	my $twice = ($self->{completeline} eq $line);
-	$self->{completeline} = $line;
+    # Twice is true if the user has hit tab twice on the same string
+    my $twice = ($self->{completeline} eq $line);
+    $self->{completeline} = $line;
 
-	my($tokens, $tokno, $tokoff) = $self->{parser}->parse_line($line,
-		messages=>0, cursorpos=>$cursor, fixclosequote=>1);
-	return unless defined($tokens);
+    my($tokens, $tokno, $tokoff) = $self->{parser}->parse_line($line,
+        messages=>0, cursorpos=>$cursor, fixclosequote=>1);
+    return unless defined($tokens);
 
-	# this just prints a whole bunch of completion/parsing debugging info
-	if($self->{debug_complete} >= 1) {
-		print "\ntext='$text', line='$line', start=$start, cursor=$cursor";
+    # this just prints a whole bunch of completion/parsing debugging info
+    if($self->{debug_complete} >= 1) {
+        print "\ntext='$text', line='$line', start=$start, cursor=$cursor";
 
-		print "\ntokens=(", join(", ", @$tokens), ") tokno=" . 
-			(defined($tokno) ? $tokno : 'undef') . " tokoff=" .
-			(defined($tokoff) ? $tokoff : 'undef');
+        print "\ntokens=(", join(", ", @$tokens), ") tokno=" . 
+            (defined($tokno) ? $tokno : 'undef') . " tokoff=" .
+            (defined($tokoff) ? $tokoff : 'undef');
 
-		print "\n";
-		my $str = " ";
-		print     "<";
-		my $i = 0;
-		for(@$tokens) {
-			my $s = (" " x length($_)) . " ";
-			substr($s,$tokoff,1) = '^' if $i eq $tokno;
-			$str .= $s;
-			print $_;
-			print ">";
-			$str .= "   ", print ", <" if $i != $#$tokens;
-			$i += 1;
-		}
-		print "\n$str\n";
-		$self->{term}->rl_on_new_line();
-	}
+        print "\n";
+        my $str = " ";
+        print     "<";
+        my $i = 0;
+        for(@$tokens) {
+            my $s = (" " x length($_)) . " ";
+            substr($s,$tokoff,1) = '^' if $i eq $tokno;
+            $str .= $s;
+            print $_;
+            print ">";
+            $str .= "   ", print ", <" if $i != $#$tokens;
+            $i += 1;
+        }
+        print "\n$str\n";
+        $self->{term}->rl_on_new_line();
+    }
 
-	my $str = $text;
+    my $str = $text;
 
-	my($cset, $cmd, $cname, $args) = $self->get_deep_command($self->commands(), $tokens);
+    my($cset, $cmd, $cname, $args) = $self->get_deep_command($self->commands(), $tokens);
 
-	# this structure hopefully contains everything you'll ever
-	# need to easily compute a match.
-	my $cmpl = {
-		str => $str,			# the exact string that needs completion
-								# (usually, you don't need anything more than this)
+    # this structure hopefully contains everything you'll ever
+    # need to easily compute a match.
+    my $cmpl = {
+        str => $str,            # the exact string that needs completion
+                                # (usually, you don't need anything more than this)
 
-		cset => $cset,			# cset of the deepest command found
-		cmd => $cmd,			# the deepest command or undef
-		cname => $cname,		# full name of deepest command
-		args => $args,			# anything that was determined to be an argument.
-		argno => $tokno - @$cname,	# the argument containing the cursor
+        cset => $cset,          # cset of the deepest command found
+        cmd => $cmd,            # the deepest command or undef
+        cname => $cname,        # full name of deepest command
+        args => $args,          # anything that was determined to be an argument.
+        argno => $tokno - @$cname,  # the argument containing the cursor
 
-		tokens => $tokens,		# tokenized command-line (arrayref).
-		tokno => $tokno,		# the index of the token containing the cursor
-		tokoff => $tokoff,		# the character offset of the cursor in $tokno.
-		twice => $twice,		# true if user has hit tab twice in a row
+        tokens => $tokens,      # tokenized command-line (arrayref).
+        tokno => $tokno,        # the index of the token containing the cursor
+        tokoff => $tokoff,      # the character offset of the cursor in $tokno.
+        twice => $twice,        # true if user has hit tab twice in a row
 
-		rawline => $line,		# pre-tokenized command line
-		rawstart => $start,		# position in rawline of the start of str
-		rawcursor => $cursor,	# position in rawline of the cursor (end of str)
-	};
+        rawline => $line,       # pre-tokenized command line
+        rawstart => $start,     # position in rawline of the start of str
+        rawcursor => $cursor,   # position in rawline of the cursor (end of str)
+    };
 
-	if($self->{debug_complete} >= 3) {
-		print "tokens=(" . join(",", @$tokens) . ") tokno=$tokno tokoff=$tokoff str=$str twice=$twice\n";
-		print "cset=$cset cmd=" . (defined($cmd) ? $cmd : "(undef)") .
-			" cname=(" . join(",", @$cname) . ") args=(" . join(",", @$args) . ") argno=".$cmpl->{argno}."\n";
-		print "rawline='$line' rawstart=$start rawcursor=$cursor\n";
-	}
+    if($self->{debug_complete} >= 3) {
+        print "tokens=(" . join(",", @$tokens) . ") tokno=$tokno tokoff=$tokoff str=$str twice=$twice\n";
+        print "cset=$cset cmd=" . (defined($cmd) ? $cmd : "(undef)") .
+            " cname=(" . join(",", @$cname) . ") args=(" . join(",", @$args) . ") argno=".$cmpl->{argno}."\n";
+        print "rawline='$line' rawstart=$start rawcursor=$cursor\n";
+    }
 
-	my $retval = $self->complete($cmpl);
-	$retval = [] unless defined($retval);
-	die "User completion routine didn't return an arrayref: $retval\n"
-		unless ref($retval) eq 'ARRAY';
+    my $retval = $self->complete($cmpl);
+    $retval = [] unless defined($retval);
+    die "User completion routine didn't return an arrayref: $retval\n"
+        unless ref($retval) eq 'ARRAY';
 
-	if($self->{debug_complete} >= 2) {
-		print "returning (", join(", ", @$retval), ")\n";
-	}
+    if($self->{debug_complete} >= 2) {
+        print "returning (", join(", ", @$retval), ")\n";
+    }
 
-	# escape the completions so they're valid on the command line
-	$self->{parser}->parse_escape($retval) unless $self->{suppress_completion_escape};
+    # escape the completions so they're valid on the command line
+    $self->{parser}->parse_escape($retval) unless $self->{suppress_completion_escape};
 
-	return @$retval;
+    return @$retval;
 }
 
 
@@ -1570,19 +1607,19 @@ sub completion_function
 
 sub get_field
 {
-	my $self = shift;
-	my $cmd = shift;
-	my $field = shift;
-	my $args = shift;
+    my $self = shift;
+    my $cmd = shift;
+    my $field = shift;
+    my $args = shift;
 
-	my $val = $cmd->{$field};
+    my $val = $cmd->{$field};
 
-	if(ref($val) eq 'CODE') {
-		$val = eval { &$val($self, $cmd, @$args) };
-		$self->error($@) if $@;
-	}
+    if(ref($val) eq 'CODE') {
+        $val = eval { &$val($self, $cmd, @$args) };
+        $self->error($@) if $@;
+    }
 
-	return $val;
+    return $val;
 }
 
 
@@ -1595,25 +1632,25 @@ Uses self->commands() if cset is not specified.
 
 sub get_cmd_summary
 {
-	my $self = shift;
-	my $tokens = shift;
-	my $topcset = shift || $self->commands();
+    my $self = shift;
+    my $tokens = shift;
+    my $topcset = shift || $self->commands();
 
-	# print "DBG print_cmd_summary: cmd=$cmd args=(" . join(", ", @$args), ")\n";
+    # print "DBG print_cmd_summary: cmd=$cmd args=(" . join(", ", @$args), ")\n";
 
-	my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
+    my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
 
-	my $desc;
-	if(!$cmd) {
-		if(exists $topcset->{''}) {
-			$cmd = $topcset->{''};
-		} else {
-			return $self->get_cname($cname) . " doesn't exist.\n";
-		}
-	}
+    my $desc;
+    if(!$cmd) {
+        if(exists $topcset->{''}) {
+            $cmd = $topcset->{''};
+        } else {
+            return $self->get_cname($cname) . " doesn't exist.\n";
+        }
+    }
 
-	$desc = $self->get_field($cmd, 'desc', $args) || "(no description)";
-	return sprintf("%20s -- $desc\n", $self->get_cname($cname));
+    $desc = $self->get_field($cmd, 'desc', $args) || "(no description)";
+    return sprintf("%20s -- $desc\n", $self->get_cname($cname));
 }
 
 =item get_cmd_help(tokens, cset)
@@ -1625,41 +1662,41 @@ Uses self->commands() if cset is not specified.
 
 sub get_cmd_help
 {
-	my $self = shift;
-	my $tokens = shift;
-	my $topcset = shift || $self->commands();
+    my $self = shift;
+    my $tokens = shift;
+    my $topcset = shift || $self->commands();
 
-	my $str = "";
+    my $str = "";
 
-	# print "DBG print_cmd_help: cmd=$cmd args=(" . join(", ", @$args), ")\n";
+    # print "DBG print_cmd_help: cmd=$cmd args=(" . join(", ", @$args), ")\n";
 
-	my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
-	if(!$cmd) {
-		if(exists $topcset->{''}) {
-			$cmd = $topcset->{''};
-		} else {
-			return $self->get_cname($cname) . " doesn't exist.\n";
-		}
-	}
+    my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
+    if(!$cmd) {
+        if(exists $topcset->{''}) {
+            $cmd = $topcset->{''};
+        } else {
+            return $self->get_cname($cname) . " doesn't exist.\n";
+        }
+    }
 
-	if($self->{display_summary_in_help}) {
-		if(exists($cmd->{desc})) {
-			$str .= $self->get_cname($cname).": ".$self->get_field($cmd,'desc',$args)."\n";
-		} else {
-			$str .= "No description for " . $self->get_cname($cname) . "\n";
-		}
-	}
+    if($self->{display_summary_in_help}) {
+        if(exists($cmd->{desc})) {
+            $str .= $self->get_cname($cname).": ".$self->get_field($cmd,'desc',$args)."\n";
+        } else {
+            $str .= "No description for " . $self->get_cname($cname) . "\n";
+        }
+    }
 
-	if(exists($cmd->{doc})) {
-		$str .= $self->get_field($cmd, 'doc',
-			[$self->get_cname($cname), @$args]);
-	} elsif(exists($cmd->{cmds})) {
-		$str .= $self->get_all_cmd_summaries($cmd->{cmds});
-	} else {
-		# no data -- do nothing
-	}
+    if(exists($cmd->{doc})) {
+        $str .= $self->get_field($cmd, 'doc',
+            [$self->get_cname($cname), @$args]);
+    } elsif(exists($cmd->{cmds})) {
+        $str .= $self->get_all_cmd_summaries($cmd->{cmds});
+    } else {
+        # no data -- do nothing
+    }
 
-	return $str;
+    return $str;
 }
 
 
@@ -1672,12 +1709,12 @@ in the category hash specified in cats.
 
 sub get_category_summary
 {
-	my $self = shift;
-	my $name = shift;
-	my $cat = shift;
+    my $self = shift;
+    my $name = shift;
+    my $cat = shift;
 
-	my $title = $cat->{desc} || "(no description)";
-	return sprintf("%20s -- $title\n", $name);
+    my $title = $cat->{desc} || "(no description)";
+    return sprintf("%20s -- $title\n", $name);
 }
 
 =item get_category_help(cat, cset)
@@ -1689,18 +1726,18 @@ You must pass the command set that contains those commands in cset.
 
 sub get_category_help
 {
-	my $self = shift;
-	my $cat = shift;
-	my $cset = shift;
+    my $self = shift;
+    my $cat = shift;
+    my $cset = shift;
 
-	my $str .= "\n" . $cat->{desc} . "\n\n";
-	for my $name (@{$cat->{cmds}}) {
-		my @line = split /\s+/, $name;
-		$str .= $self->get_cmd_summary(\@line, $cset);
-	}
-	$str .= "\n";
+    my $str .= "\n" . $cat->{desc} . "\n\n";
+    for my $name (@{$cat->{cmds}}) {
+        my @line = split /\s+/, $name;
+        $str .= $self->get_cmd_summary(\@line, $cset);
+    }
+    $str .= "\n";
 
-	return $str;
+    return $str;
 }
 
 
@@ -1713,22 +1750,22 @@ the summaries for each command in the set.
 
 sub get_all_cmd_summaries
 {
-	my $self = shift;
-	my $cset = shift;
+    my $self = shift;
+    my $cset = shift;
 
-	my $str = "";
+    my $str = "";
 
-	for(sort keys(%$cset)) {
-		# we now exclude synonyms from the command summaries.
-		# hopefully this is the right thing to do...?
-		next if exists $cset->{$_}->{syn};
-		# don't show the default command in any summaries
-		next if $_ eq '';
+    for(sort keys(%$cset)) {
+        # we now exclude synonyms from the command summaries.
+        # hopefully this is the right thing to do...?
+        next if exists $cset->{$_}->{syn};
+        # don't show the default command in any summaries
+        next if $_ eq '';
 
-		$str .= $self->get_cmd_summary([$_], $cset);
-	}
+        $str .= $self->get_cmd_summary([$_], $cset);
+    }
 
-	return $str;
+    return $str;
 }
 
 =item load_history()
@@ -1741,18 +1778,18 @@ don't use run, you will need to call this command manually.
 
 sub load_history
 {
-	my $self = shift;
+    my $self = shift;
 
-	return unless $self->{history_file} && $self->{history_max} > 0;
+    return unless $self->{history_file} && $self->{history_max} > 0;
 
-	if(open HIST, '<'.$self->{history_file}) {
-		while(<HIST>) {
-			chomp();
-			next unless /\S/;
-			$self->{term}->addhistory($_);
-		}
-		close HIST;
-	}
+    if(open HIST, '<'.$self->{history_file}) {
+        while(<HIST>) {
+            chomp();
+            next unless /\S/;
+            $self->{term}->addhistory($_);
+        }
+        close HIST;
+    }
 }
 
 =item save_history()
@@ -1769,25 +1806,25 @@ requires that the ReadLine lib supply a GetHistory call.
 
 sub save_history
 {
-	my $self = shift;
+    my $self = shift;
 
-	return unless $self->{history_file} && $self->{history_max} > 0;
-	return unless $self->{term}->can('GetHistory');
+    return unless $self->{history_file} && $self->{history_max} > 0;
+    return unless $self->{term}->can('GetHistory');
 
-	my @list = $self->{term}->GetHistory();
-	return unless(@list);
+    my @list = $self->{term}->GetHistory();
+    return unless(@list);
 
-	my $max = $#list;
-	$max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
+    my $max = $#list;
+    $max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
 
-	if(open HIST, '>'.$self->{history_file}) {
-		local $, = "\n";
-		print HIST @list[$#list-$max..$#list];
-		print HIST "\n";
-		close HIST;
-	} else {
-		$self->error("Could not open ".$self->{history_file}." for writing $!\n");
-	}
+    if(open HIST, '>'.$self->{history_file}) {
+        local $, = "\n";
+        print HIST @list[$#list-$max..$#list];
+        print HIST "\n";
+        close HIST;
+    } else {
+        $self->error("Could not open ".$self->{history_file}." for writing $!\n");
+    }
 }
 
 =item call_command(parms)
@@ -1813,78 +1850,78 @@ need to override the L<complete|/complete(cmpl)> routine too.
 
 sub call_cmd
 {
-	my $self = shift;
-	my $parms = shift;
+    my $self = shift;
+    my $parms = shift;
 
-	my $cmd = $parms->{cmd};
-	my $OUT = $self->{OUT};
+    my $cmd = $parms->{cmd};
+    my $OUT = $self->{OUT};
 
-	my $retval = undef;
-	if(exists $cmd->{meth}) {
-		# if meth is a code ref, call it, else it's a string, print it.
-		if(ref($cmd->{meth}) eq 'CODE') {
-			$retval = eval { &{$cmd->{meth}}($self, $parms, @{$parms->{args}}) };
-			$self->error($@) if $@;
-		} else {
-			print $OUT $cmd->{meth};
-		}
-	} elsif(exists $cmd->{proc}) {
-		# if proc is a code ref, call it, else it's a string, print it.
-		if(ref($cmd->{proc}) eq 'CODE') {
-			$retval = eval { &{$cmd->{proc}}(@{$parms->{args}}) };
-			$self->error($@) if $@;
-		} else {
-			print $OUT $cmd->{proc};
-		}
-	} else {
-		if(exists $cmd->{cmds}) {
-			# if not, but it has subcommands, then print a summary
-			print $OUT $self->get_all_cmd_summaries($cmd->{cmds});
-		} else {
-			$self->error($self->get_cname($parms->{cname}) . " has nothing to do!\n");
-		}
-	}
+    my $retval = undef;
+    if(exists $cmd->{meth}) {
+        # if meth is a code ref, call it, else it's a string, print it.
+        if(ref($cmd->{meth}) eq 'CODE') {
+            $retval = eval { &{$cmd->{meth}}($self, $parms, @{$parms->{args}}) };
+            $self->error($@) if $@;
+        } else {
+            print $OUT $cmd->{meth};
+        }
+    } elsif(exists $cmd->{proc}) {
+        # if proc is a code ref, call it, else it's a string, print it.
+        if(ref($cmd->{proc}) eq 'CODE') {
+            $retval = eval { &{$cmd->{proc}}(@{$parms->{args}}) };
+            $self->error($@) if $@;
+        } else {
+            print $OUT $cmd->{proc};
+        }
+    } else {
+        if(exists $cmd->{cmds}) {
+            # if not, but it has subcommands, then print a summary
+            print $OUT $self->get_all_cmd_summaries($cmd->{cmds});
+        } else {
+            $self->error($self->get_cname($parms->{cname}) . " has nothing to do!\n");
+        }
+    }
 
-	return $retval;
+    return $retval;
 }
 
 
 sub call_command
 {
-	my $self = shift;
-	my $parms = shift;
+    my $self = shift;
+    my $parms = shift;
 
-	if(!$parms->{cmd}) {
-		if( exists $parms->{cset}->{''} &&
-			(exists($parms->{cset}->{''}->{proc}) ||
-			 exists($parms->{cset}->{''}->{meth}) )
-		) {
-			# default command exists and is callable
-			my $save = $parms->{cmd};
-			$parms->{cmd} = $parms->{cset}->{''};
-			my $retval = $self->call_cmd($parms);
-			$parms->{cmd} = $save;
-			return $retval;
-		}
+    if(!$parms->{cmd}) {
+        if( exists $parms->{cset}->{''} &&
+            (exists($parms->{cset}->{''}->{proc}) ||
+             exists($parms->{cset}->{''}->{meth}) )
+        ) {
+            # default command exists and is callable
+            my $save = $parms->{cmd};
+            $parms->{cmd} = $parms->{cset}->{''};
+            my $retval = $self->call_cmd($parms);
+            $parms->{cmd} = $save;
+            return $retval;
+        }
 
-		$self->error( $self->get_cname($parms->{cname}) . ": unknown command\n");
-		return undef;
-	}
+        $self->error( $self->get_cname($parms->{cname}) . ": unknown command\n");
+        return undef;
+    }
 
-	my $cmd = $parms->{cmd};
+    my $cmd = $parms->{cmd};
 
-	# check min and max args if they exist
-	if(exists($cmd->{minargs}) && @{$parms->{args}} < $cmd->{minargs}) {
-		$self->error("Too few args!  " . $cmd->{minargs} . " minimum.\n");
-		return undef;
-	}
-	if(exists($cmd->{maxargs}) && @{$parms->{args}} > $cmd->{maxargs}) {
-		$self->error("Too many args!  " . $cmd->{maxargs} . " maximum.\n");
-		return undef;
-	}
+    # check min and max args if they exist
+    if(exists($cmd->{minargs}) && @{$parms->{args}} < $cmd->{minargs}) {
+        $self->error("Too few args!  " . $cmd->{minargs} . " minimum.\n");
+        return undef;
+    }
+    if(exists($cmd->{maxargs}) && @{$parms->{args}} > $cmd->{maxargs}) {
+        $self->error("Too many args!  " . $cmd->{maxargs} . " maximum.\n");
+        return undef;
+    }
 
-	# everything checks out -- call the command
-	return $self->call_cmd($parms);
+    # everything checks out -- call the command
+    return $self->call_cmd($parms);
 }
 
 =back
