@@ -21,12 +21,12 @@
 #
 
 
-package Connection;
+package RPC::Connection;
 
 use strict;
 
 use vars qw($VERSION);
-$VERSION = '0.8';
+$VERSION = '0.81';
 
 
 # this is the base class common to all connections
@@ -144,7 +144,7 @@ sub summarize
 
 
 
-package Connection::Soap;
+package RPC::Connection::Soap;
 
 # Protocol object handling SOAP
 
@@ -154,7 +154,7 @@ package Connection::Soap;
 
 
 
-package Connection::XMLRPC;
+package RPC::Connection::XMLRPC;
 
 # Protocol object handling XML-RPC
 
@@ -164,7 +164,7 @@ package Connection::XMLRPC;
 
 use strict;
 use vars qw(@ISA);
-@ISA = qw(Connection);
+@ISA = qw(RPC::Connection);
 
 
 # If a server doesn't support the introspection call, we can fake it
@@ -279,13 +279,13 @@ sub calc_command_set
 }
 
 
-package Connection::RPCXMLClient;
+package RPC::Connection::RPCXMLClient;
 
 # Client object using the RPC::XML::Client
 
 use strict;
 use vars qw(@ISA);
-@ISA = qw(Connection::XMLRPC);
+@ISA = qw(RPC::Connection::XMLRPC);
 
 
 # returns the object if it was created, or an error string if not.

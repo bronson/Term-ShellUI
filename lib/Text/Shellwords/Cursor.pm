@@ -7,7 +7,7 @@ package Text::Shellwords::Cursor;
 use strict;
 
 use vars qw($VERSION);
-$VERSION = '0.8';
+$VERSION = '0.81';
 
 =head1 NAME
 
@@ -27,21 +27,23 @@ DESCRIPTION
 
 This module is very similar to Text::Shellwords and Text::ParseWords.
 However, it has one very significant difference: it keeps track of
-a character position in the line it's parsing.  For instance, if I
-passed in ("zq fmgb", cursorpos=>6), it would return
+a character position in the line it's parsing.  For instance, if you
+pass it ("zq fmgb", cursorpos=>6), it would return
 (['zq', 'fmgb'], 1, 3).  Cursorpos tells where in the input string the
-cursor resides (just before the 'f'), and the result tells you that
+cursor resides (just before the 'b'), and the result tells you that
 the cursor was on token 1 ('fmgb'), character 3 ('b').
-This is very useful when computing command-line completions on complex
-command lines involving quoting, escaping, and token chars (like '=').
+This is very useful when computing command-line completions
+involving quoting, escaping, and tokenizing characters (like '(' or '=').
 
-Other routines are included as well.  You can escape a string to
+A few helper utilities are included as well.  You can escape a string to
 ensure that parsing it will produce the original string (L<parse_escape>).
 You can also reassemble the tokens with a visually pleasing amount of
 whitespace between them (L<join_line>).
 
-This module started out loosely based on Text::ParseWords.  However,
-it is now basically a ground-up reimplementation.
+This module started out as an integral part of Term::GDBUI using
+code loosely based on Text::ParseWords.  However,
+it is now basically a ground-up reimplementation.  It was
+split out of Term::GDBUI for version 0.8.
 
 =head1 METHODS
 

@@ -1,7 +1,12 @@
 - TODO: ~ expansion in file_completion
 - TODO: how do I get completion to use just the file, not the entire path?
 
-0.8: rev 40  30 Jan 2004
+0.81: rev 41  31 Jan 2004
+- somehow I left the pm_to_blib file in the tarball, breaking builds.  Removed.
+- it turns out CPAN indexes the namespace in the examples directory too.  Arg.
+  Changed all private Connection::BLAH modules to be RPC::Connection::BLAH.
+
+0.8:   rev 40  30 Jan 2004
 This release introduced one possible compatibility issue.
 - fixed a few bugs where the default command ('') wasn't being called.
 - made all method calling print an error if method can't be found
@@ -25,5 +30,5 @@ This release introduced one possible compatibility issue.
 - reorg'd pod, putting most important stuff at top
 - we now put a final newline on the command history file
 
-0.61: rev 22  16 Dec 2003
+0.61:   rev 22  16 Dec 2003
 - initial release

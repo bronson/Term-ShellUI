@@ -15,6 +15,9 @@ package Term::ExprUI;
 # If the user is typing an expression, we try to allow him to complete
 # function calls and variable names.
 #
+# TODO get rid of the command-line interface.  It's too confusing
+# to have both.  Make it 100% expression.
+#
 
 use strict;
 use Term::GDBUI;
@@ -23,29 +26,48 @@ use vars qw(@ISA);
 @ISA = qw(Term::GDBUI);
 
 use vars qw($VERSION);
-$VERSION = '0.8';
+$VERSION = '0.81';
 
 
 use POSIX qw(strtod);
 
+=head1 NOTE
 
+Term::ExprUI prevents the default method from being called.  This
+is because, after the function lookup fails, instead of passing it
+to the default method, it passes it to the expression evaluator.
+This is not a bug.  It will go away in the future since the command
+line will be removed entirely -- you will only have the expression
+interface.
+
+=head1 METHODS
+
+=over 4
+
+=item new
+
+The new method takes all of the parameters that may be passed
+to L<Term::GDBUI::new>, plus some or all of the following functions.
+They allow you to maintain the symbol table in your application
+in whatever format you desire.
 
 =over 4
 
 =item add_var NAME VAL
 
 Called when the assignment operator is used.  Passes the name of the
-variable to create and the value it should have.
+variable to create and the value it should have.  Return value is
+ignored.
 
 =item get_var NAME
 
 Called whenever a variable is used in the right-hand side of an
-expression.  Returns the value of that variable.
+expression.  Takes the name of the variable, returns its value.
 
 =item get_all_vars
 
-Returns an arrayref  of the names of all variables currently defined.
-Used for command-line completion.  Take no arguments.
+Returns an arrayref of the names of all variables currently defined.
+Used for command-line completion.  Takes no arguments.
 
 =item get_function_cset
 
@@ -55,9 +77,8 @@ definition of a command set.  Take no arguments.
 
 =item call_function NAME ARGS...
 
-Called when a function call is evaluated.  Passed the name  of
-the function to call, then any arguments it should pass to the
-function.  Result is the result of calling that function.
+Calls a function.  Passed the name of the function to call, then
+all the function's arguments.  Returns the function result.
 
 =cut
 
@@ -408,7 +429,7 @@ sub parse
 # Override command call.  If the original call failed,
 # we try to parse the command line as an expression.
 
-sub call_cmd
+sub call_command
 {
 	my $self = shift;
 	my $parms = shift;
@@ -419,7 +440,6 @@ sub call_cmd
 	}
 
 	my ($id, $val) = $self->parse($parms->{tokens}, 0);
-	# print "id=$id val=$val\n";
 	if(defined $val) {
 		$id ||= 'result';
 		$self->{add_var}->($id, $val);

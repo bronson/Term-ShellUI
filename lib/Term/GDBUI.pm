@@ -12,7 +12,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.8';
+$VERSION = '0.81';
 
 
 =head1 NAME
@@ -54,11 +54,12 @@ With no arguments, prints a list and short summary of all available commands.
 This is just a synonym for "help".  It is not listed in the possible
 completions because it just clutters up the list without being useful.
 
-=item ls
+=item exists
 
-This command shows how to perform completion using the
+This command shows how to use the
 L<complete_files|/"complete_files(cmpl, dir)">
-routine, and how to provide more comprehensive help.
+routines to complete on file names,
+and how to provide more comprehensive help.
 
 =item show
 
@@ -95,7 +96,7 @@ For a more real-world example, see "fileman-example".
              meth => sub { shift->help_call(undef, @_); }
          },
          "h" =>      { syn => "help", exclude_from_completion=>1},
-         "ls" => {
+         "exists" => {
              desc => "List whether files exist",
              args => sub { shift->complete_files(@_); },
              proc => sub {
@@ -331,6 +332,7 @@ sub help_call
 	}
 }
 
+
 =item help_args(cats, cmpl)
 
 This provides argument completion for help commands.
@@ -348,15 +350,15 @@ sub help_args
 	my $argno = $cmpl->{'argno'};
 	my $cset = $cmpl->{'cset'};
 
-	if($argno == 1) {
+	if($argno == 0) {
 		# return both categories and commands if we're on the first argument
-		return ($self->get_cset_completions($cset), keys(%$helpcats));
+		return $self->get_cset_completions($cset, keys(%$helpcats));
 	}
 
 	my($scset, $scmd, $scname, $sargs) = $self->get_deep_command($cset, $args);
 
 	# without this we'd complete with $scset for all further args
-	return [] if $argno > @$scname;
+	return [] if $argno >= @$scname;
 
 	return $self->get_cset_completions($scset);
 }
@@ -1290,7 +1292,8 @@ sub get_deep_command
 	my $tokens = shift;
 	my $curtok = shift || 0;	# points to the command name
 
-	#print "get_deep_cmd: $cset $#$tokens(" . join(",", @$tokens) . ") $curtok\n";
+	#print "DBG get_deep_cmd: $#$tokens tokens: '" . join("', '", @$tokens) . "'\n";
+	#print "DBG cset: (" . join(", ", keys %$cset) . ")\n";
 
 	my $name = $tokens->[$curtok];
 
@@ -1313,15 +1316,15 @@ sub get_deep_command
 		return $self->get_deep_command($subcmds, $tokens, $curtok+1);
 	}
 
-	#print "splitting (" . join(",",@$tokens) . ") at curtok=$curtok\n";
+	#print "DBG splitting (" . join(",",@$tokens) . ") at curtok=$curtok\n";
 
 	# split deep command name and its arguments into separate lists
 	my @cname = @$tokens;
 	my @args = ($#cname > $curtok ? splice(@cname, $curtok+1) : ());
 
-	#print "tokens (" . join(",",@$tokens) . ")\n";
-	#print "cname (" . join(",",@cname) . ")\n";
-	#print "args (" . join(",",@args) . ")\n";
+	#print "DBG tokens (" . join(",",@$tokens) . ")\n";
+	#print "DBG cname (" . join(",",@cname) . ")\n";
+	#print "DBG args (" . join(",",@args) . ")\n";
 
 	return ($cset, $cmd, \@cname, \@args);
 }
@@ -1596,7 +1599,7 @@ sub get_cmd_summary
 	my $tokens = shift;
 	my $topcset = shift || $self->commands();
 
-	# print "print_cmd_summary: cmd=$cmd args=(" . join(", ", @$args), ")\n";
+	# print "DBG print_cmd_summary: cmd=$cmd args=(" . join(", ", @$args), ")\n";
 
 	my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
 
@@ -1628,7 +1631,7 @@ sub get_cmd_help
 
 	my $str = "";
 
-	# print "print_cmd_help: cmd=$cmd args=(" . join(", ", @$args), ")\n";
+	# print "DBG print_cmd_help: cmd=$cmd args=(" . join(", ", @$args), ")\n";
 
 	my($cset, $cmd, $cname, $args) = $self->get_deep_command($topcset, $tokens);
 	if(!$cmd) {
@@ -1716,7 +1719,12 @@ sub get_all_cmd_summaries
 	my $str = "";
 
 	for(sort keys(%$cset)) {
-		next unless exists $cset->{$_}->{desc};
+		# we now exclude synonyms from the command summaries.
+		# hopefully this is the right thing to do...?
+		next if exists $cset->{$_}->{syn};
+		# don't show the default command in any summaries
+		next if $_ eq '';
+
 		$str .= $self->get_cmd_summary([$_], $cset);
 	}
 
@@ -1847,14 +1855,19 @@ sub call_command
 	my $parms = shift;
 
 	if(!$parms->{cmd}) {
-		if(exists $parms->{cset}->{''}) {
+		if( exists $parms->{cset}->{''} &&
+			(exists($parms->{cset}->{''}->{proc}) ||
+			 exists($parms->{cset}->{''}->{meth}) )
+		) {
+			# default command exists and is callable
 			my $save = $parms->{cmd};
 			$parms->{cmd} = $parms->{cset}->{''};
 			my $retval = $self->call_cmd($parms);
 			$parms->{cmd} = $save;
 			return $retval;
 		}
-		$self->error( $self->get_cname($parms->{cname}) . " doesn't exist.\n");
+
+		$self->error( $self->get_cname($parms->{cname}) . ": unknown command\n");
 		return undef;
 	}
 
