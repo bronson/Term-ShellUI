@@ -1,8 +1,17 @@
+- TODO: change the module's name to Term::ShellUI
+
+maybe never:
 - TODO: ~ expansion in file_completion
-  (problem is, how do you replace the ~ in the original text with the home directory, like bash?)
+  (problem is, how do you replace the ~ in the original text with the home directory, like bash does?)
 - TODO: how do I get completion to use just the file, not the entire path?
   (like the above problem, it requires changing the completion text)
 
+
+0.821: 27 Dec 2004
+
+- Print the ReadLine lib being used in the synopsis script
+- Turn off tainting in use.t.  Term::ReadKey (and therefore
+  Term::ReadLine::Perl) can't handle it.
 
 0.82:  23 Dec 2004
 - You can now supply an anonymous sub as a prompt (see fileman-example).

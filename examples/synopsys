@@ -10,6 +10,7 @@ use lib '../lib';
 
 use Term::GDBUI;
 my $term = new Term::GDBUI(commands => get_commands());
+print 'Using '.$term->{term}->ReadLine."\n";
 $term->run();
 
 # COMMAND SET:

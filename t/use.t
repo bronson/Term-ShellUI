@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -Tw
+#!/usr/bin/env perl -w
 
 use strict;
 use Test::More tests => 2;
