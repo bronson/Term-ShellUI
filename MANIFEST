@@ -1,0 +1,9 @@
+Changes
+fileman-example
+lib/Term/GDBUI.pm
+Makefile.PL
+MANIFEST
+README
+synopsys
+test-line-parse
+tui-sample
