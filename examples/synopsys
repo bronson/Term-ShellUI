@@ -4,7 +4,7 @@
 # it actually works.
 
 use strict;
-use lib 'lib';
+use lib '../lib';
 
 # SYNOPSIS:
 
@@ -42,7 +42,7 @@ EOL
 			cmds => {
 				"warranty" => { proc => "You have no warranty!\n" },
 				"args" => {
-					args => [ sub {qw(create delete)}, \&Term::GDBUI::complete_files ],
+					args => [ sub {['create', 'delete']}, \&Term::GDBUI::complete_files ],
 					desc => "Demonstrate method calling",
 					meth => sub {
 						my $self = shift;
@@ -58,5 +58,13 @@ EOL
 			maxargs => 0,
 			meth => sub { shift->exit_requested(1); }
 		},
+# Uncomment the default command to see how it is called.
+# It might be a mite confusing so it's disabled by default.
+#		'' => {
+#			proc => "HA ha.  No command here by that name\n",
+#			desc => "HA ha.  No help for unknown commands.",
+#			doc => "Yet more taunting...\n",
+#			args => sub { shift->complete_history(@_) },
+#		},
 	};
 }

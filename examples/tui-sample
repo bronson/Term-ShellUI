@@ -7,7 +7,7 @@
 # This file may be copied and used under the same terms as Perl itself.
 
 use strict;
-use lib 'lib';
+use lib '../lib';
 use Term::GDBUI;
 
 my $term = new Term::GDBUI(commands => get_commands());

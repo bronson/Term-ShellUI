@@ -11,7 +11,7 @@
 # This file may be copied and used under the same terms as Perl itself.
 
 use strict;
-use lib 'lib';
+use lib '../lib';
 use Term::GDBUI;
 use File::stat qw(:FIELDS);
 
@@ -61,10 +61,15 @@ sub get_commands
 		"view" =>	{ desc => "View the contents of FILEs",
 					  args => sub { shift->complete_onlyfiles(@_); },
 					  proc => sub { system('cat', @_); } },
+# these demonstrate how parts of Term::GDBUI work:
 		echo =>		{ desc => "Echoes the command-line arguments",
 					  proc => sub { print join(" ", @_), "\n"; } }, 
 		tok =>		{ desc => "Print command-line arguments with clear separations",
 					  proc => sub { print "<" . join(">, <", @_), ">\n"; } }, 
+		debug_complete => { desc => "Turn on completion debugging",
+					  minargs => 1, maxargs => 1, args => "0=off 1=some, 2=more, 3=tons",
+					  proc => sub { $term->{debug_complete} = $_[0] },
+					},
 	};
 }
 

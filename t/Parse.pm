@@ -1,21 +1,20 @@
-#!/usr/bin/perl -w
+# This file contains all the tests used to exercise the parser.
 
-# Tests the Term::GDBUI tokenizer/parser.
-# Pass the indexes of the tests you want to run as arguments.
-# If no arguments supplied, runs all tests.
-# If arguments supplied, runs tests verbosely.
-
+package Parse;
 use strict;
+use vars qw(%Tests);
 
-use lib 'lib';
-use Term::GDBUI;
-use FreezeThaw qw(freeze cmpStr);
-use YAML qw(Dump);
+# format:
+# fields are separated by colons.
+#   First: 3-digit test number
+#   Second: cursor position
+#   Third: test string
+#   Result
 
 
 # The tests to run
 # Format: "index:cursorpos:inputstring" => result
-my %tin = (
+%Tests = (
 	"000::" => [[], undef, undef],
 	"001::   " => [[], undef, undef],
 	"002:0:" => [[''], 0, 0],
@@ -99,41 +98,4 @@ my %tin = (
 	"100::this   is \"a test\" of\\ quotewords \\\"for you" => [['this', 'is', 'a test', 'of quotewords', '"for', 'you'], undef, undef],
 );
 
-my $term = new Term::GDBUI;
-die "No term" unless $term;
-
-# Parse cmdline args
-my %seltest;
-for(@ARGV) { $seltest{$_} = 1; }
-my $verbose = 1, $term->{debug} = 1 if @ARGV;
-
-
-print "\nTest Result\n---------------------------------\n" unless $verbose;
-
-my($ntests, $nfail) = (0,0);
-for my $input (sort keys %tin) {
-	my($index,$cpos,$test) = $input =~ /^(\d+):(\d*):(.*)$/;
-	die "No test in item $index:    $input\n" unless defined $test;
-	next if %seltest && !exists($seltest{0+$index});
-
-	my($toks, $tokno, $tokoff) = $term->parse_line($test, messages=>$verbose, cursorpos=>$cpos);
-	my $result = [$toks, $tokno, $tokoff];
-	my $eq = 0 == cmpStr($result, $tin{$input});
-	
-	if($verbose) {
-		print "\nTest $index: $test cursor=$cpos\n";
-		print "Expected output: " . freeze($tin{$input}) . "\n";
-		print Dump($tin{$input});
-		print "Received output: " . freeze($result) . "\n";
-		print Dump($result);
-	} else {
-		printf("%2d: %s    $test\n", $index, ($eq ? 'OK  ' : 'FAIL'));
-	}
-
-	$ntests++;
-	$nfail++ unless $eq;
-}
-
-print "\n\n$ntests test" . ($ntests == 1 ? "" : "s") ." run, ";
-print "$nfail failure" . ($nfail == 1 ? "" : "s") . ".\n\n";
-
+1;
