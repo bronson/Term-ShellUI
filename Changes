@@ -1,11 +1,25 @@
-- TODO: change the module's name to Term::ShellUI
+- TODO: maybe change the module's name to Term::ShellUI?
 
 maybe never:
 - TODO: ~ expansion in file_completion
-  (problem is, how do you replace the ~ in the original text with the home directory, like bash does?)
+  Problem is, how do you replace the ~ in the original text with the
+  home directory, like bash does?  This isn't standardized among Perl
+  commandline completion libraries (right?)
 - TODO: how do I get completion to use just the file, not the entire path?
   (like the above problem, it requires changing the completion text)
 
+
+
+0.84: 27 Apr 2006
+
+Added two features suggested by Don Rodgers:
+- backslash_continues_command to support command continuation.
+- exclude_from_history to prevent a command from being stored in the history.
+
+0.83:
+
+- Re-enable ornaments by default.  (Term::GDBUI turned ornaments off because
+  it was exposing Term::ReadLine::Gnu bugs that have since been fixed).
 
 0.821: 27 Dec 2004
 

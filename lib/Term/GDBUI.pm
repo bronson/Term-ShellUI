@@ -12,7 +12,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.82';
+$VERSION = '0.84';
 
 
 =head1 NAME
@@ -40,9 +40,8 @@ care of the heavy lifting.
 
 A command set is the data structure that
 describes your application's entire user interface.
-It is simply a collection of L</COMMANDS>.
 It's easiest to illustrate with a working example.
-We shall implement the following 6 commands:
+We shall implement the following 6 L</COMMAND>s:
 
 =over 4
 
@@ -53,8 +52,8 @@ With no arguments, prints a list and short summary of all available commands.
 
 =item h
 
-This is just a synonym for "help".  It is not listed in the possible
-completions because it just clutters up the list without being useful.
+This is just a synonym for "help".  We don't want to list it in the
+possible completions.
 Of course, pressing "h<tab><return>" will autocomplete to "help" and
 then execute the help command.  Including this command allows you to 
 simply type "h<return>".
@@ -62,7 +61,7 @@ simply type "h<return>".
 =item exists
 
 This command shows how to use the
-L<complete_files|/"complete_files(cmpl, dir)">
+L</complete_files>
 routines to complete on file names,
 and how to provide more comprehensive help.
 
@@ -200,7 +199,7 @@ above.
 
 Similar to proc, but passes more arguments.  Where proc simply passes
 the arguments for the command, meth also passes the Term::GDBUI object
-and the command's parms object (see L<call_cmd|/call_cmd(parms)>
+and the command's parms object (see L</call_cmd>
 for more on parms).  Most commands can be implemented entirely using
 a simple proc procedure, but sometimes they require addtional information
 supplied to the meth method.  Like proc, meth may also be a string.
@@ -208,15 +207,14 @@ supplied to the meth method.  Like proc, meth may also be a string.
 =item args
 
 This tells how to complete the command's arguments.  It is usually
-a subroutine.  See L<complete_files|/"complete_files(cmpl, dir)">
-for an reasonably simple
-example, and the L<complete|/complete(cmpl)> routine for a description of the
+a subroutine.  See L</complete_files> for an reasonably simple
+example, and the L</complete> routine for a description of the
 arguments and cmpl data structure.
 
 Args can also be an arrayref.  Each position in the array will be
 used as the corresponding argument.
 See "show args" in get_commands above for an example.
-The last argument is repeated indefinitely (see L<maxargs>
+The last argument is repeated indefinitely (see L</maxargs>
 for how to limit this).
 
 Finally, args can also be a string.  The string is intended to
@@ -241,7 +239,12 @@ the subcommand.
 If this field exists, then the command will be excluded from command-line
 completion.  This is useful for one-letter abbreviations, such as
 "h"->"help": including "h" in the completions just clutters up
-the screen and impairs the other completions.
+the screen.
+
+=item exclude_from_history
+
+If this field exists, the command will never be stored in history.
+This is useful for commands like help and quit.
 
 =back
 
@@ -271,8 +274,8 @@ result in information overload.  To manage this, you can organize
 your commands into help categories
 
 All help categories are assembled into a hash and passed to the
-the default L<help_call|/"help_call(cats, parms, topic)"> and
-L<help_args|/"help_args(cats, cmpl)"> methods.  If you don't
+the default L<help_call> and
+L</help_args> methods.  If you don't
 want to use help categories, simply pass undef for the categories.
 
 Here is an example of how to declare a collection of help categories:
@@ -424,7 +427,7 @@ sub complete_files
 
 =item complete_onlyfiles
 
-Like L<complete_files|/"complete_files(cmpl, dir)">
+Like L</complete_files">
 but excludes directories, device nodes, etc.
 It returns regular files only.
 
@@ -448,7 +451,7 @@ sub complete_onlyfiles
 
 =item complete_onlydirs
 
-Like L<complete_files|/"complete_files(cmpl, dir)">,
+Like L</complete_files">,
 but excludes files, device nodes, etc.
 It returns only directories.  
 It I<does> return the . and .. special directories so you'll need
@@ -692,19 +695,48 @@ If you specify C<keep_quotes=E<gt>1>, however, they are preserved.
 This is useful if your application uses quotes to delimit, say,
 Perl-style strings.
 
+=item backslash_continues_command
+
+Normally commands don't respect backslash continuation.  If you
+pass backslash_continues_command=>1 to L</new>, then whenever a line
+ends with a backslash, Term::GDBUI will continue reading.  The backslash
+is replaced with a space, so
+	$ abc \
+	> def
+
+Will produce the command string 'abc  def'.
+
 =item prompt
 
 This is the prompt that should be displayed for every request.
 It can be changed at any time using the L</prompt> method.
-The default is "$0> " (see L<app> above).
+The default is S<<"$0> ">> (see L<app> above).
 
 If you specify a code reference, then the coderef is executed and
-its return value is set as the prompt.  A single argument is passed
-to the coderef: the Term::GDBUI object.  For example, the following
+its return value is set as the prompt.  Two arguments are passed
+to the coderef: the Term::GDBUI object, and the raw command.
+The raw command is always "" unless you're using command completion,
+where the raw command is the command line entered so far.
+
+For example, the following
 line sets the prompt to "## > " where ## is the current number of history
 items.
 
     $term->prompt(sub { $term->{term}->GetHistory() . " > " });
+
+If you specify an arrayref, then the first item is the normal prompt
+and the second item is the prompt when the command is being continued.
+For instance, this would emulate Bash's behavior ($ is the normal
+prompt, but > is the prompt when continuing).
+
+	$term->prompt(['$', '>']);
+
+Of course, you specify backslash_continues_command=>1 to to L</new> to cause
+commands to continue.
+
+And, of course, you can use an array of procs too.
+
+	$term->prompt([sub {'$'}, sub {'<'}]);
 
 =item token_chars
 
@@ -729,11 +761,6 @@ to prevent printing the desc above the doc.  Defaults to 1.
 
 =back
 
-By default, the terminal has ornaments (text trickery to make the
-command line stand out) turned off.  You can re-enable ornaments
-by calling $gdbui->{term}->ornaments(arg) where arg is described in
-L<Term::ReadLine/ornaments>.
-
 =cut
 
 sub new
@@ -744,6 +771,7 @@ sub new
         prompt => "$0> ",
         commands => undef,
         blank_repeats_cmd => 0,
+		backslash_continues_command => 0,
         history_file => undef,
         history_max => 500,
         token_chars => '',
@@ -778,7 +806,6 @@ sub new
     }
 
     $self->{term} ||= new Term::ReadLine($args{'app'});
-    $self->{term}->ornaments(0);    # turn off decoration by default
     $self->{term}->MinLine(0);  # manually call AddHistory
 
     my $attrs = $self->{term}->Attribs;
@@ -806,19 +833,26 @@ sub process_a_cmd
     my $self = shift;
 
     $self->{completeline} = "";
-
-    my $prompt = $self->prompt();
-    $prompt = $prompt->($self) if ref $prompt eq 'CODE';
-    my $rawline = $self->{term}->readline($prompt);
-
     my $OUT = $self->{'OUT'};
 
-    # EOF exits
-    unless(defined $rawline) {
-        print $OUT "\n";
-        $self->exit_requested(1);
-        return undef;
-    }
+	my $rawline = "";
+	for(;;) {
+		my $prompt = $self->prompt();
+		$prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
+		$prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
+		my $newline = $self->{term}->readline($prompt);
+
+		# EOF exits
+		unless(defined $newline) {
+			print $OUT "\n";
+			$self->exit_requested(1);
+			return undef;
+		}
+
+		my $continued = ($newline =~ s/\\$//);
+		$rawline .= (length $rawline ? " " : "") . $newline;
+		last unless $self->{backslash_continues_command} && $continued;
+	} 
 
     # is it a blank line?
     if($rawline =~ /^\s*$/) {
@@ -858,6 +892,7 @@ sub process_a_cmd
 
     my $retval = undef;
     my $str = $rawline;
+	my $save_to_history = 1;
 
     # parse the line unless it was already parsed as part of history expansion
     ($tokens) = $self->{parser}->parse_line($rawline, messages=>1) unless $tokens;
@@ -883,11 +918,17 @@ sub process_a_cmd
             };
 
             $retval = $self->call_command($parms);
+
+			if(exists $cmd->{exclude_from_history}) {
+				$save_to_history = 0;
+			}
         }
     }
 
     # Add to history unless it's a dupe of the previous command.
-    $self->{term}->addhistory($str) if $str ne $self->{prevcmd};
+	if($save_to_history && $str ne $self->{prevcmd}) {
+		$self->{term}->addhistory($str);
+	}
     $self->{prevcmd} = $str;
 
     return $retval;
@@ -1811,16 +1852,15 @@ sub save_history
     return unless $self->{history_file} && $self->{history_max} > 0;
     return unless $self->{term}->can('GetHistory');
 
-    my @list = $self->{term}->GetHistory();
-    return unless(@list);
-
-    my $max = $#list;
-    $max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
-
     if(open HIST, '>'.$self->{history_file}) {
         local $, = "\n";
-        print HIST @list[$#list-$max..$#list];
-        print HIST "\n";
+		my @list = $self->{term}->GetHistory();
+		if(@list) {
+			my $max = $#list;
+			$max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
+			print HIST @list[$#list-$max..$#list];
+			print HIST "\n";
+		}
         close HIST;
     } else {
         $self->error("Could not open ".$self->{history_file}." for writing $!\n");
@@ -1935,7 +1975,7 @@ sounds very realistic.
 
 =head1 LICENSE
 
-Copyright (c) 2003 Scott Bronson, all rights reserved. 
+Copyright (c) 2003-2006 Scott Bronson, all rights reserved. 
 This program is free software; you can redistribute it and/or modify 
 it under the same terms as Perl itself.  
 

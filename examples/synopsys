@@ -9,7 +9,10 @@ use lib '../lib';
 # SYNOPSIS:
 
 use Term::GDBUI;
-my $term = new Term::GDBUI(commands => get_commands());
+my $term = new Term::GDBUI(
+		commands => get_commands(),
+		history_file => '~/.gdbui-synopsis-history',
+	);
 print 'Using '.$term->{term}->ReadLine."\n";
 $term->run();
 
@@ -24,6 +27,15 @@ sub get_commands
 			args => sub { shift->help_args(undef, @_); },
 			meth => sub { shift->help_call(undef, @_); }
 		}, 
+		"history" => { desc => "Prints the command history",
+			doc => "Specify a number to list the last N lines of history\n" .
+				"Pass -c to clear the command history, " .
+				"-d NUM to delete a single item\n",
+			args => "[-c] [-d] [number]",
+			meth => sub { shift->history_call(@_) },
+			exclude_from_history => 1,
+		},
+
         "exit" => {
             desc => "Exits the program.",
             maxargs => 0,

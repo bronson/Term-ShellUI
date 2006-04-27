@@ -9,16 +9,16 @@ quoting, escaping, pretty much everything you would expect of a decent
 shell.
 
 This module would seem similar to Sullivan Beck's Term::TUI module
-except that Term::TUI presents its own hierarchical-style interface
-and GDBUI tries to emulate Bash and GDB as much as possible.
+except that Term::TUI uses a custom hierarchical-style interface
+and GDBUI tries to behave as much like Bash and GDB as possible.
 
 
 PREREQUISITES
 
 None!  It runs just fine with Perl's default Term::ReadLine.  However,
-it will be missing a number of features such as command history,
+you will not be able to use some features such as command history,
 completion, etc.  Install Term::ReadLine::GNU or Term::ReadLine::Perl
-to take advantage of these.
+to take full advantage of Term::GDBUI's features.
 
 
 INSTALLATION
