@@ -1,13 +1,18 @@
-- TODO: maybe change the module's name to Term::ShellUI?
-
 maybe never:
 - TODO: ~ expansion in file_completion
   Problem is, how do you replace the ~ in the original text with the
-  home directory, like bash does?  This isn't standardized among Perl
+  home directory like bash does?  This isn't standardized among Perl
   commandline completion libraries (right?)
 - TODO: how do I get completion to use just the file, not the entire path?
   (like the above problem, it requires changing the completion text)
 
+
+0.85: 7 June 2006
+
+- Renamed 'meth' to 'method'.  'meth' will continue to work indefinitely
+  so there's no need to change your code.
+- Renamed the module to ShellUI.  A simple s/GDBUI/ShellUI/g should be all
+  that's required to continue to use this module.
 
 
 0.84: 27 Apr 2006
@@ -16,10 +21,12 @@ Added two features suggested by Don Rodgers:
 - backslash_continues_command to support command continuation.
 - exclude_from_history to prevent a command from being stored in the history.
 
+
 0.83:
 
 - Re-enable ornaments by default.  (Term::GDBUI turned ornaments off because
   it was exposing Term::ReadLine::Gnu bugs that have since been fixed).
+
 
 0.821: 27 Dec 2004
 
@@ -27,23 +34,31 @@ Added two features suggested by Don Rodgers:
 - Turn off tainting in use.t.  Term::ReadKey (and therefore
   Term::ReadLine::Perl) can't handle it.
 
+
 0.82:  23 Dec 2004
+
 - You can now supply an anonymous sub as a prompt (see fileman-example).
-- Added a fix from Erick Calder to fix completion when using Term::ReadLine::Perl.
+- Fix from Erick Calder to fix completion when using Term::ReadLine::Perl.
 - Try to fix "Cannot open /dev/tty" errors when running automated tests.
 - Convert tabs in most files to spaces.
 - A few doc fixups.
 
+
 0.811: 02 Feb 2004
+
 - 'make test' used to require FreezeThaw.  I didn't realize the barrage
-  of errors that would cause.  Rewritten to be self-sufficient.
+  of testing errors that would cause.  Rewritten to be self-sufficient.
+
 
 0.81: 31 Jan 2004
+
 - somehow I left the pm_to_blib file in the tarball, breaking builds.  Removed.
 - it turns out CPAN indexes the namespace in the examples directory too.  Arg.
   Changed all private Connection::BLAH modules to be RPC::Connection::BLAH.
 
+
 0.8:  rev 40  30 Jan 2004
+
 This release introduced one possible compatibility issue.
 - fixed a few bugs where the default command ('') wasn't being called.
 - made all method calling print an error if method can't be found
@@ -67,5 +82,7 @@ This release introduced one possible compatibility issue.
 - reorg'd pod, putting most important stuff at top
 - we now put a final newline on the command history file
 
+
 0.61: 16 Dec 2003
+
 - initial release

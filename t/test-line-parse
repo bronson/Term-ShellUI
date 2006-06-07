@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Tests the Term::GDBUI tokenizer/parser.
+# Tests the Term::ShellUI tokenizer/parser.
 # Pass the indexes of the tests you want to run as arguments.
 # If no arguments supplied, runs all tests.
 # If arguments supplied, verbosely displays results.

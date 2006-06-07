@@ -5,11 +5,11 @@
 # 23 Dec 2004
 
 # NOTE: this is extremely unfinished.  It is intended to demonstrate
-# how to handle a fully dynamic command set in GDBUI.
+# how to handle a fully dynamic command set in ShellUI.
 
 
 # psh is intended to be a fully interactive Perl shell (not in the
-# sense of Bash, but in the sense of running Python with no args).
+# sense of Bash, but in the sense of running Python with no args) or irb.
 #
 # Supply a Perl expression on the command line and Perl will evaluate
 # it and exit.  Otherwise, it will drop you into the interactive shell.
@@ -23,10 +23,10 @@ if(@ARGV) {
 # if no arguments then enter interactive shell.
 
 use lib "../lib";
-use Term::GDBUI;
+use Term::ShellUI;
 
 # Our term only has one command: the default command.
-my $term = new Term::GDBUI(prompt => "Perl> ",
+my $term = new Term::ShellUI(prompt => "Perl> ",
     # todo: add command completion
     commands => { "" => {
         meth => sub {

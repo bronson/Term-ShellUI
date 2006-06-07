@@ -7,8 +7,8 @@
 package Term::ExprUI;
 
 #
-# This package overrides Term::GDBUI to add an expression parser.
-# Term::GDBUI gets the command line first and, if it is valid, it
+# This package overrides Term::ShellUI to add an expression parser.
+# Term::ShellUI gets the command line first and, if it is valid, it
 # uses it.  Else, the command is passed to a simple recursive
 # descent parser for interpretation as an expression.
 #
@@ -20,10 +20,10 @@ package Term::ExprUI;
 #
 
 use strict;
-use Term::GDBUI;
+use Term::ShellUI;
 
 use vars qw(@ISA);
-@ISA = qw(Term::GDBUI);
+@ISA = qw(Term::ShellUI);
 
 use vars qw($VERSION);
 $VERSION = '0.81';
@@ -47,7 +47,7 @@ interface.
 =item new
 
 The new method takes all of the parameters that may be passed
-to L<Term::GDBUI::new>, plus some or all of the following functions.
+to L<Term::ShellUI::new>, plus some or all of the following functions.
 They allow you to maintain the symbol table in your application
 in whatever format you desire.
 
@@ -72,7 +72,7 @@ Used for command-line completion.  Takes no arguments.
 =item get_function_cset
 
 Returns a command set listing all known functions.  Used for both
-displaying help and generating completions.  See Term::GDBUI for the
+displaying help and generating completions.  See Term::ShellUI for the
 definition of a command set.  Take no arguments.
 
 =item call_function NAME ARGS...
@@ -86,7 +86,7 @@ sub new
 {
 	my $type = shift;
 
-	my $self = new Term::GDBUI(
+	my $self = new Term::ShellUI(
 		blank_repeats_cmds => 1,
 		keep_quotes => 1,
 		token_chars => '=,[]()+-*/^',

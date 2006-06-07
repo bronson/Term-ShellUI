@@ -1,10 +1,10 @@
-# Term::GDBUI.pm
+# Term::ShellUI.pm
 # Scott Bronson
 # 3 Nov 2003
 
 # Makes it very easy to implement a GDB-like interface.
 
-package Term::GDBUI;
+package Term::ShellUI;
 
 use strict;
 
@@ -12,29 +12,46 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.84';
+$VERSION = '0.85';
 
 
 =head1 NAME
 
-Term::GDBUI - A fully-featured shell-like command line environment
+Term::ShellUI - A fully-featured shell-like command line environment
 
 =head1 SYNOPSIS
 
- use Term::GDBUI;
- my $term = new Term::GDBUI(commands => get_commands());
- #   (see below for the code to get_commands)
- $term->run();
-
+  use Term::ShellUI;
+  my $term = new Term::ShellUI(
+      commands => {
+              "cd" => {
+                  desc => "Change to directory DIR",
+                  maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
+                  proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
+              },
+              "pwd" => {
+                  desc => "Print the current working directory",
+                  maxargs => 0, proc => sub { system('pwd'); },
+              },
+              "quit" => {
+                  desc => "Quit using Fileman", maxargs => 0,
+                  method => sub { shift->exit_requested(1); },
+              }},
+          history_file => '~/.gdbui-synopsis-history',
+      );
+  print 'Using '.$term->{term}->ReadLine."\n";
+  $term->run();
 
 =head1 DESCRIPTION
 
-Term::GDBUI uses the history and autocompletion features of L<Term::ReadLine>
+Term::ShellUI uses the history and autocompletion features of L<Term::ReadLine>
 to present a sophisticated command-line interface to the user.  It tries to
-make every feature you would expect to see in a fully interactive shell
+make every feature that one would expect to see in a fully interactive shell
 trivial to implement.
-You simply declare your command set and let GDBUI take
+You simply declare your command set and let ShellUI take
 care of the heavy lifting.
+
+This module was previously called Term::GDBUI.
 
 =head1 COMMAND SET
 
@@ -82,13 +99,13 @@ name followed by its arguments.
 =item quit
 
 How to nicely quit.
-Term::GDBUI also follows Term::ReadLine's default of quitting
+Term::ShellUI also follows Term::ReadLine's default of quitting
 when Control-D is pressed.
 
 =back
 
 This code is fairly comprehensive because it attempts to
-demonstrate most of Term::GDBUI's many features.  You can find a working
+demonstrate most of Term::ShellUI's many features.  You can find a working
 version of this exact code titled "synopsis" in the examples directory.
 For a more real-world example, see the fileman-example in the same
 directory.
@@ -99,7 +116,7 @@ directory.
          "help" => {
              desc => "Print helpful information",
              args => sub { shift->help_args(undef, @_); },
-             meth => sub { shift->help_call(undef, @_); }
+             method => sub { shift->help_call(undef, @_); }
          },
          "h" =>      { syn => "help", exclude_from_completion=>1},
          "exists" => {
@@ -123,9 +140,9 @@ directory.
                  "args" => {
                      minargs => 2, maxargs => 2,
                      args => [ sub {qw(create delete)},
-                               \&Term::GDBUI::complete_files ],
+                               \&Term::ShellUI::complete_files ],
                      desc => "Demonstrate method calling",
-                     meth => sub {
+                     method => sub {
                          my $self = shift;
                          my $parms = shift;
                          print $self->get_cname($parms->{cname}) .
@@ -137,7 +154,7 @@ directory.
          "quit" => {
              desc => "Quit using Fileman",
              maxargs => 0,
-             meth => sub { shift->exit_requested(1); }
+             method => sub { shift->exit_requested(1); }
          },
      };
  }
@@ -149,7 +166,7 @@ This data structure describes a single command implemented
 by your application.
 "help", "exit", etc.
 All fields are optional.
-Commands are passed to Term::GDBUI using a L</COMMAND SET>.
+Commands are passed to Term::ShellUI using a L</COMMAND SET>.
 
 =over 4
 
@@ -158,7 +175,7 @@ Commands are passed to Term::GDBUI using a L</COMMAND SET>.
 A short, one-line description for the command.  Normally this is
 a simple string, but it may also be a subroutine that
 will be called every time the description is printed.
-The subroutine takes two arguments, $self (the Term::GDBUI object),
+The subroutine takes two arguments, $self (the Term::ShellUI object),
 and $cmd (the command hash for the command), and returns the
 command's description as a string.
 
@@ -168,7 +185,7 @@ A comprehensive, many-line description for the command.
 Like desc, this is normally a string but
 if you store a reference to a subroutine in this field,
 it will be called to calculate the documentation.
-Your subroutine should accept three arguments: self (the Term::GDBUI object),
+Your subroutine should accept three arguments: self (the Term::ShellUI object),
 cmd (the command hash for the command), and the command's name.
 It should return a string containing the command's documentation.
 See examples/xmlexer to see how to read the doc 
@@ -195,14 +212,14 @@ is printed when the command is executed (good for things like
 Examples of both subroutine and string procs can be seen in the example
 above.
 
-=item meth
+=item method
 
 Similar to proc, but passes more arguments.  Where proc simply passes
-the arguments for the command, meth also passes the Term::GDBUI object
+the arguments for the command, method also passes the Term::ShellUI object
 and the command's parms object (see L</call_cmd>
 for more on parms).  Most commands can be implemented entirely using
 a simple proc procedure, but sometimes they require addtional information
-supplied to the meth method.  Like proc, meth may also be a string.
+supplied to the method.  Like proc, method may also be a string.
 
 =item args
 
@@ -229,9 +246,9 @@ subcommands (like GDB's info and show commands, and the
 show command in the example above).
 A command that has subcommands should only have two fields:
 cmds (of course), and desc (briefly describe this collection of subcommands).
-It may also implement doc, but GDBUI's default behavior of printing
+It may also implement doc, but ShellUI's default behavior of printing
 a summary of the command's subcommands is usually sufficient.
-Any other fields (args, meth, maxargs, etc) will be taken from
+Any other fields (args, method, maxargs, etc) will be taken from
 the subcommand.
 
 =item exclude_from_completion
@@ -261,7 +278,7 @@ command cannot be found.  Here's an example:
   },
 
 Note that minargs and maxargs for the default command are ignored.
-meth and proc will be called no matter how many arguments the user
+method and proc will be called no matter how many arguments the user
 entered.
 
 
@@ -298,7 +315,7 @@ subcommands with whitespace.
 
 =head1 CALLBACKS
 
-Callbacks are functions supplied by GDBUI but intended to be called by
+Callbacks are functions supplied by ShellUI but intended to be called by
 your application.
 They implement common functions like 'help' and 'history'.
 
@@ -312,7 +329,7 @@ arguments:
 
   "help" =>   { desc => "Print helpful information",
                 args => sub { shift->help_args($helpcats, @_); },
-                meth => sub { shift->help_call($helpcats, @_); } },
+                method => sub { shift->help_call($helpcats, @_); } },
 
 =cut
 
@@ -472,7 +489,7 @@ sub complete_onlydirs
 
 =item complete_history
 
-Believe it or not, GDBUI provides tab completion on command history.
+Believe it or not, ShellUI provides tab completion on command history.
 To use this feature, specify the complete_history routine in
 your default command handler.  Because the default command handler
 is run any time you enter an unrecognized command, it will be
@@ -559,7 +576,7 @@ Add it to your command set using something like this:
             "Pass -c to clear the command history, " .
             "-d NUM to delete a single item\n",
      args => "[-c] [-d] [number]",
-     meth => sub { shift->history_call(@_) },
+     method => sub { shift->history_call(@_) },
   },
 
 =cut
@@ -620,7 +637,7 @@ sub history_call
 =head1 METHODS
 
 These are the routines that your application calls to create
-and use a Term::GDBUI object.
+and use a Term::ShellUI object.
 Usually you simply call new() and then run() -- everything else
 is handled automatically.
 You only need to read this section if you wanted to do something out
@@ -628,9 +645,9 @@ of the ordinary.
 
 =over 4
 
-=item new Term::GDBUI(I<C<named args...>>)
+=item new Term::ShellUI(I<C<named args...>>)
 
-Creates a new GDBUI object.
+Creates a new ShellUI object.
 
 It accepts the following named parameters:
 
@@ -643,20 +660,20 @@ Defaults to $0, the name of the current executable.
 
 =item term
 
-Usually Term::GDBUI uses its own Term::ReadLine object
+Usually Term::ShellUI uses its own Term::ReadLine object
 (created with C<new Term::ReadLine $args{'app'}>).  However, if
 you can create a new Term::ReadLine object yourself and
 supply it using the term argument.
 
 =item blank_repeats_cmd
 
-This tells Term::GDBUI what to do when the user enters a blank
+This tells Term::ShellUI what to do when the user enters a blank
 line.  Pass 0 (the default) to have it do nothing (like Bash),
 or 1 to have it repeat the last command (like GDB).
 
 =item commands
 
-A hashref containing all the commands that GDBUI will respond to.
+A hashref containing all the commands that ShellUI will respond to.
 The format of this data structure can be found below in the
 L<command set|/"COMMAND SET"> documentation.
 If you do not supply any commands to the constructor, you must call
@@ -676,14 +693,14 @@ C<~/.myprog-history> is perfectly acceptable.
 This tells how many items to save to the history file.
 The default is 500.
 
-Note that this parameter does not affect in-memory history.  Term::GDBUI
+Note that this parameter does not affect in-memory history.  Term::ShellUI
 makes no attemt to cull history so you're at the mercy
 of the default of whatever ReadLine library you are using.
 See L<Term::ReadLine::Gnu/StifleHistory> for one way to change this.
 
 =item disable_history_expansion
 
-Term::GDBUI supports the incredibly complex readline4 history expansion
+Term::ShellUI supports the incredibly complex readline4 history expansion
 (!! repeats last command, !$ is the last arg, etc).
 It's turned on by default because it can be very useful.
 If you want to disable it, pass C<disable_history_expansion=E<gt>1>.
@@ -699,7 +716,7 @@ Perl-style strings.
 
 Normally commands don't respect backslash continuation.  If you
 pass backslash_continues_command=>1 to L</new>, then whenever a line
-ends with a backslash, Term::GDBUI will continue reading.  The backslash
+ends with a backslash, Term::ShellUI will continue reading.  The backslash
 is replaced with a space, so
 	$ abc \
 	> def
@@ -714,7 +731,7 @@ The default is S<<"$0> ">> (see L<app> above).
 
 If you specify a code reference, then the coderef is executed and
 its return value is set as the prompt.  Two arguments are passed
-to the coderef: the Term::GDBUI object, and the raw command.
+to the coderef: the Term::ShellUI object, and the raw command.
 The raw command is always "" unless you're using command completion,
 where the raw command is the command line entered so far.
 
@@ -1014,7 +1031,7 @@ sub add_commands
 
 =item exit_requested(exitflag)
 
-If supplied with an argument, sets Term::GDBUI's finished flag
+If supplied with an argument, sets Term::ShellUI's finished flag
 to the argument (1=exit, 0=don't exit).  So, to get the
 interpreter to exit at the end of processing the current
 command, call C<$self-E<gt>exit_requested(1)>.  To cancel an exit
@@ -1055,8 +1072,8 @@ This routine is called when the user inputs a blank line.
 It returns a string specifying the command to run or
 undef if nothing should happen.
 
-By default, GDBUI simply presents another command line.  Pass
-C<blank_repeats_cmd=E<gt>1> to L<the constructor|/new> to get GDBUI to repeat the previous
+By default, ShellUI simply presents another command line.  Pass
+C<blank_repeats_cmd=E<gt>1> to L<the constructor|/new> to get ShellUI to repeat the previous
 command.  Override this method to supply your own behavior.
 
 =cut
@@ -1096,11 +1113,11 @@ sub error
 
 Term::ReadLine makes writing a completion routine a
 notoriously difficult task.
-Term::GDBUI goes out of its way to make it as easy
+Term::ShellUI goes out of its way to make it as easy
 as possible.  The best way to write a completion routine
 is to start with one that already does something similar to
 what you want (see the L</CALLBACKS> section for the completion
-routines that come with GDBUI).
+routines that come with ShellUI).
 
 Your routine returns either an arrayref of possible completions
 or undef if an error prevented any completions from being generated.
@@ -1108,7 +1125,7 @@ Return an empty array if there are simply no applicable competions.
 Be careful; the distinction between no completions and an error
 can be significant.
 
-Your routine takes two arguments: a reference to the GDBUI
+Your routine takes two arguments: a reference to the ShellUI
 object and cmpl, a data structure that contains all the information you need
 to calculate the completions.  Set $term->{debug_complete}=5
 to see the contents of cmpl:
@@ -1123,7 +1140,7 @@ you don't need anything more than this.
 NOTE: str does I<not> respect token_chars!  It is supplied unchanged
 from Readline and so uses whatever tokenizing it implements.
 Unfortunately, if you've changed token_chars, this will often
-be different from how Term::GDBUI would tokenize the same string.
+be different from how Term::ShellUI would tokenize the same string.
 
 =item cset
 
@@ -1304,7 +1321,7 @@ sub force_to_string
 
 =head1 INTERNALS
 
-These commands are internal to GDBUI.
+These commands are internal to ShellUI.
 They are documented here only for completeness -- you
 should never need to call them.
 
@@ -1429,7 +1446,7 @@ sub get_cset_completions
 =item call_args
 
 Given a command set, does the correct thing at this stage in the
-completion (a surprisingly nontrivial task thanks to GDBUI's
+completion (a surprisingly nontrivial task thanks to ShellUI's
 flexibility).  Called by complete().
 
 =cut
@@ -1897,13 +1914,14 @@ sub call_cmd
     my $OUT = $self->{OUT};
 
     my $retval = undef;
-    if(exists $cmd->{meth}) {
+    if(exists $cmd->{meth} || exists $cmd->{method}) {
+		my $meth = $cmd->{meth} || $cmd->{method};
         # if meth is a code ref, call it, else it's a string, print it.
-        if(ref($cmd->{meth}) eq 'CODE') {
-            $retval = eval { &{$cmd->{meth}}($self, $parms, @{$parms->{args}}) };
+        if(ref($meth) eq 'CODE') {
+            $retval = eval { &$meth($self, $parms, @{$parms->{args}}) };
             $self->error($@) if $@;
         } else {
-            print $OUT $cmd->{meth};
+            print $OUT $meth;
         }
     } elsif(exists $cmd->{proc}) {
         # if proc is a code ref, call it, else it's a string, print it.
@@ -1934,7 +1952,9 @@ sub call_command
     if(!$parms->{cmd}) {
         if( exists $parms->{cset}->{''} &&
             (exists($parms->{cset}->{''}->{proc}) ||
-             exists($parms->{cset}->{''}->{meth}) )
+             exists($parms->{cset}->{''}->{meth}) ||
+             exists($parms->{cset}->{''}->{method})
+			)
         ) {
             # default command exists and is callable
             my $save = $parms->{cmd};

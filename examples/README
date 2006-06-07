@@ -3,7 +3,7 @@ examples/README
 
 
 
-These are some example programs that show how to use Term::GDBUI.
+These are some example programs that show how to use Term::ShellUI.
 
 
 
@@ -24,7 +24,7 @@ directory completion.  All dangerous commands are disabled by default.
 
 synopsys	
 
-This is the code from Term::GDBUI's POD.  It ensures that the
+This is the code from Term::ShellUI's POD.  It ensures that the
 code in the documentation actually runs.
 
 
@@ -32,7 +32,7 @@ code in the documentation actually runs.
 tui-sample
 
 The Term::TUI module includes an example of its own.  I have
-re-implemented this example using Term::GDBUI to illustrate the
+re-implemented this example using Term::ShellUI to illustrate the
 similarities and differences between the two modules.
 
 

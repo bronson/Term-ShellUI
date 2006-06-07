@@ -716,7 +716,7 @@ process printed every time you stomp on tab.
 =head1 EXPRESSIONS
 
 xmlexer actually has two parsers in it: the shell-like one provided
-by Term::GDBUI and its own internal expression parser.  Use shell-like
+by Term::ShellUI and its own internal expression parser.  Use shell-like
 expressions when working with xmlexer, and expressions when working
 with remote servers.
 
