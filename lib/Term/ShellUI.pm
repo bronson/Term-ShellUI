@@ -12,7 +12,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.85';
+$VERSION = '0.86';
 
 
 =head1 NAME
@@ -29,15 +29,16 @@ Term::ShellUI - A fully-featured shell-like command line environment
                   maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
                   proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
               },
+			  "chdir" => { alias => 'cd' },
               "pwd" => {
                   desc => "Print the current working directory",
                   maxargs => 0, proc => sub { system('pwd'); },
               },
               "quit" => {
-                  desc => "Quit using Fileman", maxargs => 0,
+                  desc => "Quit this program", maxargs => 0,
                   method => sub { shift->exit_requested(1); },
               }},
-          history_file => '~/.gdbui-synopsis-history',
+          history_file => '~/.shellui-synopsis-history',
       );
   print 'Using '.$term->{term}->ReadLine."\n";
   $term->run();
@@ -51,7 +52,7 @@ trivial to implement.
 You simply declare your command set and let ShellUI take
 care of the heavy lifting.
 
-This module was previously called Term::GDBUI.
+This module was previously called L<Term::GDBUI>.
 
 =head1 COMMAND SET
 
@@ -74,6 +75,9 @@ possible completions.
 Of course, pressing "h<tab><return>" will autocomplete to "help" and
 then execute the help command.  Including this command allows you to 
 simply type "h<return>".
+
+The 'alias' directive used to be called 'syn' (for synonym).
+Either term works.
 
 =item exists
 
@@ -118,7 +122,7 @@ directory.
              args => sub { shift->help_args(undef, @_); },
              method => sub { shift->help_call(undef, @_); }
          },
-         "h" =>      { syn => "help", exclude_from_completion=>1},
+         "h" =>      { alias => "help", exclude_from_completion=>1},
          "exists" => {
              desc => "List whether files exist",
              args => sub { shift->complete_files(@_); },
@@ -156,6 +160,7 @@ directory.
              maxargs => 0,
              method => sub { shift->exit_requested(1); }
          },
+		 "q" => { alias => 'quit', exclude_from_completion => 1 },
      };
  }
 
@@ -1119,7 +1124,8 @@ is to start with one that already does something similar to
 what you want (see the L</CALLBACKS> section for the completion
 routines that come with ShellUI).
 
-Your routine returns either an arrayref of possible completions
+Your routine returns an arrayref of possible completions,
+a string conaining a short but helpful note,
 or undef if an error prevented any completions from being generated.
 Return an empty array if there are simply no applicable competions.
 Be careful; the distinction between no completions and an error
@@ -1226,9 +1232,11 @@ sub completemsg
     my $self = shift;
     my $msg = shift;
 
-    my $OUT = $self->{OUT};
-    print $OUT $msg;
-    $self->{term}->rl_on_new_line();
+    if($self->{term}->can('rl_on_new_line')) {
+        my $OUT = $self->{OUT};
+        print $OUT $msg;
+        $self->{term}->rl_on_new_line();
+    }
 }
 
 
@@ -1391,8 +1399,12 @@ sub get_deep_command
     my $name = $tokens->[$curtok];
 
     # loop through all synonyms to find the actual command
-    while(exists($cset->{$name}) && exists($cset->{$name}->{'syn'})) {
-        $name = $cset->{$name}->{'syn'};
+    while(exists($cset->{$name}) && (
+		exists($cset->{$name}->{'alias'}) ||
+		exists($cset->{$name}->{'syn'})
+	)) {
+        $name = $cset->{$name}->{'alias'} ||
+				$cset->{$name}->{'syn'};
     }
 
     my $cmd = $cset->{$name};
@@ -1606,8 +1618,10 @@ sub completion_function
             $str .= "   ", print ", <" if $i != $#$tokens;
             $i += 1;
         }
-        print "\n$str\n";
-        $self->{term}->rl_on_new_line();
+        if($self->{term}->can('rl_on_new_line')) {
+            print "\n$str\n";
+            $self->{term}->rl_on_new_line();
+        }
     }
 
     my $str = $text;
@@ -1645,8 +1659,10 @@ sub completion_function
 
     my $retval = $self->complete($cmpl);
     $retval = [] unless defined($retval);
-    die "User completion routine didn't return an arrayref: $retval\n"
-        unless ref($retval) eq 'ARRAY';
+	unless(ref($retval) eq 'ARRAY') {
+		$self->completemsg("$retval\n") if $cmpl->{twice};
+		$retval = [];
+	}
 
     if($self->{debug_complete} >= 2) {
         print "returning (", join(", ", @$retval), ")\n";
@@ -1816,7 +1832,7 @@ sub get_all_cmd_summaries
     for(sort keys(%$cset)) {
         # we now exclude synonyms from the command summaries.
         # hopefully this is the right thing to do...?
-        next if exists $cset->{$_}->{syn};
+        next if exists $cset->{$_}->{alias} || exists $cset->{$_}->{syn};
         # don't show the default command in any summaries
         next if $_ eq '';
 
@@ -1936,7 +1952,8 @@ sub call_cmd
             # if not, but it has subcommands, then print a summary
             print $OUT $self->get_all_cmd_summaries($cmd->{cmds});
         } else {
-            $self->error($self->get_cname($parms->{cname}) . " has nothing to do!\n");
+            $self->error("The ". $self->get_cname($parms->{cname}) .
+				" command has no proc or method to call!\n");
         }
     }
 

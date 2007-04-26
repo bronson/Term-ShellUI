@@ -1,10 +1,19 @@
-maybe never:
+Probably never:
 - TODO: ~ expansion in file_completion
   Problem is, how do you replace the ~ in the original text with the
   home directory like bash does?  This isn't standardized among Perl
-  commandline completion libraries (right?)
+  commandline completion libraries
 - TODO: how do I get completion to use just the file, not the entire path?
   (like the above problem, it requires changing the completion text)
+
+
+0.86: 26 Apr 2007
+- Removed the use.t test.  Bugs in Term::ReadLine::X would cause this
+  test to fail randomly and always seemed to evade my workarounds.
+- Renamed 'syn' to 'alias'.  'syn' will continue to work indefinitely.
+- If a completion routine returns a string, the string will now be printed.
+  Before we would just error out ungracefully.
+- Fixed http://rt.cpan.org/Ticket/Display.html?id=26692 reported by Erik Sherk
 
 
 0.85: 7 June 2006
@@ -17,7 +26,7 @@ maybe never:
 
 0.84: 27 Apr 2006
 
-Added two features suggested by Don Rodgers:
+- Added two features suggested by Don Rodgers:
 - backslash_continues_command to support command continuation.
 - exclude_from_history to prevent a command from being stored in the history.
 

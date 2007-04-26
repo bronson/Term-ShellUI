@@ -4,7 +4,6 @@ MANIFEST
 README
 lib/Term/ShellUI.pm
 lib/Text/Shellwords/Cursor.pm
-t/use.t
 t/parse.t
 t/test-line-parse
 t/Parse.pm
