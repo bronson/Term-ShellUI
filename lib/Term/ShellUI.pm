@@ -869,6 +869,7 @@ sub run
     my $self = shift;
 
     $self->load_history();
+    $self->getset('done', 0);
 
     while(!$self->{done}) {
         $self->process_a_cmd();
@@ -1941,6 +1942,7 @@ it under the same terms as Perl itself.
 
 Scott Bronson E<lt>bronson@rinspin.comE<gt>
 Lester Hightower E<lt>hightowe@cpan.orgE<gt>
+Ryan Gies E<lt>ryan@livesite.netE<gt>
 
 =cut
 

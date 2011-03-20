@@ -1,3 +1,6 @@
+- Support calling $term->run() multiple times (patch by Ryan Gies)
+
+
 0.9: 20 Mar 2011
 
 - Relicensed from the somewhat ambiguous Perl license to the MIT license.
