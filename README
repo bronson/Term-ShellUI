@@ -1,16 +1,12 @@
 
 
-                           Term::ShellUI README
+                     Term::ShellUI README
 
 
-Term::ShellUI makes it easy (almost trivial) to implement a very comprehensive
-Bash or GDB-like user interface.  It supports history, autocompletion,
+Term::ShellUI makes it easy to implement a comprehensive Bash or
+GDB-like command line user interface.  It supports history, autocompletion,
 quoting, escaping, pretty much everything you would expect of a decent
 shell.
-
-This module would seem similar to Sullivan Beck's Term::TUI module
-except that Term::TUI uses a custom hierarchical-style interface
-whereas ShellUI tries to emulate Bash and GDB as much as possible.
 
 
 PREREQUISITES
@@ -29,11 +25,21 @@ make test
 make install
 
 
+USAGE
+
+Fire up examples/synopsis-big.  Hit 'help' to display the available
+commands or 'help exists' to show detailed help for a command.
+Notice how everything can be tab-completed.  Experiment with passing
+the wrong number of arguments to a command.  Scroll back through
+history using the up arrow and use the history command.
+
+Run 'perldoc lib/Term/ShellUI.pm' to see the API documentation.
+
+
 LICENSE
 
 Copyright (c) 2003-2007 Scott Bronson, all rights reserved.
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This program is covered by the MIT license.
 
 
 AUTHOR

@@ -1,6 +1,7 @@
 # Term::ShellUI.pm
 # Scott Bronson
 # 3 Nov 2003
+# Covered by the MIT license.
 
 # Makes it very easy to implement a GDB-like interface.
 
@@ -12,7 +13,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.86';
+$VERSION = '0.87';
 
 
 =head1 NAME

@@ -1,6 +1,7 @@
 # Text::Shellwords::Cursor.pm
 # Scott Bronson
 # 27 Jan 2003
+# Covered by the MIT license.
 
 package Text::Shellwords::Cursor;
 

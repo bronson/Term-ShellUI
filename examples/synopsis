@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
-# This is the example code from the module's POD to ensure that
-# it actually works.
+# Example code from the module's POD to ensure that it actually works.
+# Just three simple commands to show argument handling and completion.
 
 use strict;
 use lib '../lib';
@@ -23,8 +23,9 @@ my $term = new Term::ShellUI(
 				desc => "Quit using Fileman", maxargs => 0,
 				method => sub { shift->exit_requested(1); },
 			}},
-		history_file => '~/.gdbui-synopsis-history',
+		history_file => '~/.shellui-synopsis-history',
 	);
+
 print 'Using '.$term->{term}->ReadLine."\n";
 $term->run();
 

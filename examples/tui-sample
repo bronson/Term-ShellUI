@@ -3,8 +3,7 @@
 
 # This shows the similarities between Term::TUI (see the sample.pl file)
 # and Term::ShellUI.  This example allows you to enter any number of arguments
-# (except for subs of course).
-# This file may be copied and used under the same terms as Perl itself.
+# (except for subs of course).  Released in the public domain.
 
 use strict;
 use lib '../lib';

@@ -7,13 +7,8 @@ lib/Text/Shellwords/Cursor.pm
 t/parse.t
 t/test-line-parse
 t/Parse.pm
-examples/README
-examples/synopsys
-examples/synopsys-old
+examples/synopsis
+examples/synopsis-big
 examples/fileman-example
 examples/tui-sample
-examples/xmlexer
-examples/psh
-examples/RPC/Connection.pm
-examples/Term/ExprUI.pm
 META.yml                                 Module meta-data (added by MakeMaker)

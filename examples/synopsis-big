@@ -1,35 +1,32 @@
 #!/usr/bin/perl -w
 
-# This was the example code from the module's POD to ensure that
-# it actually works.  As you can see, it turned into more of an
-# experimental testbed so another synopsys was written.  This
-# file is still a good example of how to use some of the ShellUI
-# features.
+# This was originally the example code from Term::ShellUI's documentation
+# but it grew too big.  Now it's intended to demonstrate most of the
+# available features and yet still be easy to read.
 
 use strict;
 use lib '../lib';
 
-# SYNOPSIS:
 
 use Term::ShellUI;
 my $term = new Term::ShellUI(
 		commands => get_commands(),
-		history_file => '~/.gdbui-synopsis-history',
+		history_file => '~/.shellui-synopsis-history',
 	);
 print 'Using '.$term->{term}->ReadLine."\n";
 $term->run();
 
-# COMMAND SET:
 
 sub get_commands
 {
 	return {
 		"h" =>		{ syn => "help", exclude_from_completion=>1 },
+		"?" =>		{ syn => "help", exclude_from_completion=>1 },
 		"help" => {
 			desc => "Print helpful information",
 			args => sub { shift->help_args(undef, @_); },
 			meth => sub { shift->help_call(undef, @_); }
-		}, 
+		},
 		"history" => { desc => "Prints the command history",
 			doc => "Specify a number to list the last N lines of history\n" .
 				"Pass -c to clear the command history, " .
@@ -38,12 +35,11 @@ sub get_commands
 			meth => sub { shift->history_call(@_) },
 			exclude_from_history => 1,
 		},
-
-        "exit" => {
-            desc => "Exits the program.",
-            maxargs => 0,
+		"exit" => {
+			desc => "Exits the program.",
+			maxargs => 0,
 			meth => sub { shift->exit_requested(1); },
-        },
+		},
 		"exists" => {
 			desc => "Shows whether files exist",
 			args => sub { shift->complete_files(@_); },
@@ -53,12 +49,12 @@ sub get_commands
 					"\n";
 			},
 			doc => <<EOL,
-Comprehensive documentation for our ls command.
-If a file exists, it is printed in <angle brackets>.
-Otherwise, it is just printed normally.
-The help can\nspan\nmany\nlines
+Comprehensive documentation for our the exists command.
+Pass any number of filenames.  If a file exists, it is
+printed in <angle brackets>.
+This detailed doc can\nspan\nmany\nlines
 EOL
-		}, 
+		},
 		"show" => {
 			desc => "An example of using subcommands",
 			cmds => {
@@ -66,7 +62,7 @@ EOL
 				"args" => {
 					args => [ sub {['create', 'delete']},
 						\&Term::ShellUI::complete_files ],
-					desc => "Demonstrate method calling",
+					desc => "Print the passed arguments",
 					meth => sub {
 						my $self = shift;
 						my $parms = shift;
@@ -81,13 +77,16 @@ EOL
 			maxargs => 0,
 			meth => sub { shift->exit_requested(1); },
 		},
-# Uncomment the default command to see how it is called.
-# It might be a mite confusing so it's disabled by default.
-#		'' => {
-#			proc => "HA ha.  No command here by that name\n",
-#			desc => "HA ha.  No help for unknown commands.",
-#			doc => "Yet more taunting...\n",
-#			args => sub { shift->complete_history(@_) },
-#		},
+
+		# Term::ShellUI normally displays "asdf: unknown command".
+		# This shows how to use the default command.  If the user
+		# types an unknown command, ShellUI calls '' if it exists.
+		'' => {
+			proc => "No command here by that name!\n",
+			desc => "No help for unknown commands.",
+			doc => "Well, here's a little help: don't type them.\n",
+			args => sub { shift->complete_history(@_) },
+		},
 	};
 }
+

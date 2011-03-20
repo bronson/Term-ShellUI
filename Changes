@@ -1,13 +1,8 @@
-Probably never:
-- TODO: ~ expansion in file_completion
-  Problem is, how do you replace the ~ in the original text with the
-  home directory like bash does?  This isn't standardized among Perl
-  commandline completion libraries
-- TODO: how do I get completion to use just the file, not the entire path?
-  (like the above problem, it requires changing the completion text)
+- Relicensed from the somewhat ambiguous Perl license to the MIT license.
 
 
 0.86: 26 Apr 2007
+
 - Removed the use.t test.  Bugs in Term::ReadLine::X would cause this
   test to fail randomly and always seemed to evade my workarounds.
 - Renamed 'syn' to 'alias'.  'syn' will continue to work indefinitely.
