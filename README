@@ -16,7 +16,8 @@ PREREQUISITES
 
 None!  It runs just fine with Perl's default Term::ReadLine.  However,
 until you install Term::ReadLine::GNU, completion, editing, and history
-will not be available.
+will not be available.  If you're on Windows then Term::ReadLine::Perl
+will probably be easier to install but it doesn't support completemsg().
 
 
 INSTALLATION

@@ -1151,12 +1151,17 @@ can call.
 
 =item completemsg(msg)
 
-your completion routine should call this to display text onscreen
-so that the command line being completed doesn't get messed up.
-If your completion routine prints text without calling completemsg,
-the cursor will no longer be displayed in the correct position.
+Allows your completion routine to print to the screen while completing
+(i.e. to offer suggestions or print debugging info -- see debug_complete).
+If it just blindly calls print, the prompt will be corrupted and things
+will be confusing until the user redraws the screen (probably by hitting
+Control-L).
 
     $self->completemsg("You cannot complete here!\n");
+
+Note that Term::ReadLine::Perl doesn't support this so the user will always
+have to hit Control-L after printing.  If your completion routine returns
+a string rather than calling completemsg() then it should work everywhere.
 
 =cut
 
@@ -1167,7 +1172,13 @@ sub completemsg
 
     my $OUT = $self->{OUT};
     print $OUT $msg;
-    $self->{term}->rl_on_new_line();
+
+    # Now we need to tell the readline library to redraw the entire
+    # command line.  Term::ReadLine::Gnu offers rl_on_new_line() but,
+    # because it's XS, it can't be detected using can().
+    # So, we just eval it and ignore any errors.  If it doesn't exist
+    # then the prompt is corrupted.  Oh well, best we can do!
+    eval { $self->{term}->rl_on_new_line() };
 }
 
 
@@ -1553,8 +1564,7 @@ sub completion_function
             $str .= "   ", print ", <" if $i != $#$tokens;
             $i += 1;
         }
-        print "\n$str\n";
-        $self->{term}->rl_on_new_line();
+        $self->completemsg("\n$str\n");
     }
 
     my $str = $text;
