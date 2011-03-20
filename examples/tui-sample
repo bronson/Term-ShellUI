@@ -15,12 +15,12 @@ $term->run();
 sub get_commands
 {
 	return {
-		"abort" =>  { syn => "quit" },
+		"abort" =>  { alias => "quit" },
 		"help" => 	{ desc => "Print helpful information",
 					  args => sub { shift->help_args(undef, @_); },
-					  meth => sub { shift->help_call(undef, @_); } },
+					  method => sub { shift->help_call(undef, @_); } },
 		"quit" =>	{ desc => "Quit using this program",
-					  maxargs => 0, meth => sub { shift->exit_requested(1); } },
+					  maxargs => 0, method => sub { shift->exit_requested(1); } },
 		"math" => {
 			desc => "A simple calculator",
 			cmds => {
