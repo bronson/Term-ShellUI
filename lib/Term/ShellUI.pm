@@ -763,46 +763,50 @@ sub new
 }
 
 
-=item process_a_cmd()
+=item process_a_cmd([cmd])
 
-Prompts for and returns the results from a single command.
-Returns undef if no command was called.
+Runs the specified command or prompts for it if no arguments are supplied.
+Returns the result or undef if no command was called.
 
 =cut
 
 sub process_a_cmd
 {
-    my $self = shift;
+    my ($self, $incmd) = @_;
 
     $self->{completeline} = "";
     my $OUT = $self->{'OUT'};
 
     my $rawline = "";
-    INPUT_LOOP: for(;;) {
-        my $prompt = $self->prompt();
-        $prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
-        $prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
-        my $newline = $self->{term}->readline($prompt);
+    if($incmd) {
+        $rawline = $incmd;
+    } else {
+        INPUT_LOOP: for(;;) {
+            my $prompt = $self->prompt();
+            $prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
+            $prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
+            my $newline = $self->{term}->readline($prompt);
 
-        # EOF exits
-        unless(defined $newline) {
-            # If we have eof_exit_hooks let them have a say
-            if(scalar(@{$self->{eof_exit_hooks}})) {
-                foreach my $sub (@{$self->{eof_exit_hooks}}) {
-                    if(&$sub()) {
-                        next INPUT_LOOP;
+            # EOF exits
+            unless(defined $newline) {
+                # If we have eof_exit_hooks let them have a say
+                if(scalar(@{$self->{eof_exit_hooks}})) {
+                    foreach my $sub (@{$self->{eof_exit_hooks}}) {
+                        if(&$sub()) {
+                            next INPUT_LOOP;
+                        }
                     }
                 }
+
+                print $OUT "\n";
+                $self->exit_requested(1);
+                return undef;
             }
 
-            print $OUT "\n";
-            $self->exit_requested(1);
-            return undef;
+            my $continued = ($newline =~ s/\\$//);
+            $rawline .= (length $rawline ? " " : "") . $newline;
+            last unless $self->{backslash_continues_command} && $continued;
         }
-
-        my $continued = ($newline =~ s/\\$//);
-        $rawline .= (length $rawline ? " " : "") . $newline;
-        last unless $self->{backslash_continues_command} && $continued;
     }
 
     # is it a blank line?
@@ -1943,6 +1947,7 @@ it under the same terms as Perl itself.
 Scott Bronson E<lt>bronson@rinspin.comE<gt>
 Lester Hightower E<lt>hightowe@cpan.orgE<gt>
 Ryan Gies E<lt>ryan@livesite.netE<gt>
+Martin Kluge E<lt>mk@elxsi.deE<gt>
 
 =cut
 
