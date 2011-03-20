@@ -8,6 +8,9 @@ GDB-like command line user interface.  It supports history,
 autocompletion, quoting, escaping, pretty much everything you would
 expect of a decent shell.
 
+GitHub: http://github.com/bronson/Term-ShellUI
+CPAN:   http://search.cpan.org/search?query=Term%3A%3AShellUI
+
 
 PREREQUISITES
 
@@ -33,6 +36,8 @@ arguments to a command.  Scroll back through history using the up arrow
 or Control-R and use the history command.
 
 Run 'perldoc lib/Term/ShellUI.pm' to see the API documentation.
+
+Report bugs and submit patches via GitHub.
 
 
 LICENSE
