@@ -12,9 +12,8 @@ expect of a decent shell.
 PREREQUISITES
 
 None!  It runs just fine with Perl's default Term::ReadLine.  However,
-you will not be able to use some features such as command history,
-completion, etc.  Install Term::ReadLine::GNU or Term::ReadLine::Perl
-to take full advantage of Term::ShellUI's features.
+until you install Term::ReadLine::GNU, completion, editing, and history
+will not be available.
 
 
 INSTALLATION
@@ -27,11 +26,11 @@ make install
 
 USAGE
 
-Fire up examples/synopsis-big.  Hit 'help' to display the available
-commands or 'help exists' to show detailed help for a command.  Notice
-how everything can be tab-completed.  Experiment with passing the wrong
-number of arguments to a command.  Scroll back through history using the
-up arrow and use the history command.
+Run examples/synopsis-big.  Hit 'help' to display the available commands
+or 'help exists' to show detailed help for a command.  Notice how
+everything can be tab-completed.  Try passing the wrong number of
+arguments to a command.  Scroll back through history using the up arrow
+or Control-R and use the history command.
 
 Run 'perldoc lib/Term/ShellUI.pm' to see the API documentation.
 

@@ -1,6 +1,8 @@
 - Relicensed from the somewhat ambiguous Perl license to the MIT license.
 - Remove complete_history callback. It was an odd, ShellUI-specific feature.
-- Remove history expansion (!!, !$).  That implementation was too buggy.
+- Remove history expansion (!!, !$, ^o^n).  That implementation was too buggy.
+- Fix bug: completion suggestion wasn't printed with Term::ReadLine::Gnu.
+- Deprecate Term::ReadLine::Perl. Use Term::ReadLine::Gnu.
 
 
 0.86: 26 Apr 2007

@@ -1121,11 +1121,9 @@ sub completemsg
     my $self = shift;
     my $msg = shift;
 
-    if($self->{term}->can('rl_on_new_line')) {
-        my $OUT = $self->{OUT};
-        print $OUT $msg;
-        $self->{term}->rl_on_new_line();
-    }
+    my $OUT = $self->{OUT};
+    print $OUT $msg;
+    $self->{term}->rl_on_new_line();
 }
 
 
@@ -1507,10 +1505,8 @@ sub completion_function
             $str .= "   ", print ", <" if $i != $#$tokens;
             $i += 1;
         }
-        if($self->{term}->can('rl_on_new_line')) {
-            print "\n$str\n";
-            $self->{term}->rl_on_new_line();
-        }
+        print "\n$str\n";
+        $self->{term}->rl_on_new_line();
     }
 
     my $str = $text;
