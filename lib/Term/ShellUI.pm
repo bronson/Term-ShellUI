@@ -74,7 +74,7 @@ With no arguments, prints a list and short summary of all available commands.
 This is just a synonym for "help".  We don't want to list it in the
 possible completions.
 Of course, pressing "h<tab><return>" will autocomplete to "help" and
-then execute the help command.  Including this command allows you to 
+then execute the help command.  Including this command allows you to
 simply type "h<return>".
 
 The 'alias' directive used to be called 'syn' (for synonym).
@@ -194,7 +194,7 @@ it will be called to calculate the documentation.
 Your subroutine should accept three arguments: self (the Term::ShellUI object),
 cmd (the command hash for the command), and the command's name.
 It should return a string containing the command's documentation.
-See examples/xmlexer to see how to read the doc 
+See examples/xmlexer to see how to read the doc
 for a command out of the pod.
 
 =item minargs
@@ -248,7 +248,7 @@ It does not affect completion at all.
 =item cmds
 
 Command sets can be recursive.  This allows a command to have
-subcommands (like GDB's info and show commands, and the 
+subcommands (like GDB's info and show commands, and the
 show command in the example above).
 A command that has subcommands should only have two fields:
 cmds (of course), and desc (briefly describe this collection of subcommands).
@@ -476,7 +476,7 @@ sub complete_onlyfiles
 
 Like L</complete_files">,
 but excludes files, device nodes, etc.
-It returns only directories.  
+It returns only directories.
 It I<does> return the . and .. special directories so you'll need
 to remove those manually if you don't want to see them:
 
@@ -632,13 +632,6 @@ makes no attemt to cull history so you're at the mercy
 of the default of whatever ReadLine library you are using.
 See L<Term::ReadLine::Gnu/StifleHistory> for one way to change this.
 
-=item disable_history_expansion
-
-Term::ShellUI supports the incredibly complex readline4 history expansion
-(!! repeats last command, !$ is the last arg, etc).
-It's turned on by default because it can be very useful.
-If you want to disable it, pass C<disable_history_expansion=E<gt>1>.
-
 =item keep_quotes
 
 Normally all unescaped, unnecessary quote marks are stripped.
@@ -698,9 +691,6 @@ Without token_chars, 'ab=123' remains a single string.
 
 NOTE: you cannot change token_chars after the constructor has been
 called!  The regexps that use it are compiled once (m//o).
-Also, until the Gnu Readline library can accept "=[]," without
-diving into an endless loop, we will not tell history expansion
-to use token_chars (it uses " \t\n()<>;&|" by default).
 
 =item display_summary_in_help
 
@@ -728,7 +718,6 @@ sub new
         token_chars => '',
         keep_quotes => 0,
         debug_complete => 0,
-        disable_history_expansion => 0,
         display_summary_in_help => 1,
         @_
     );
@@ -803,7 +792,7 @@ sub process_a_cmd
 		my $continued = ($newline =~ s/\\$//);
 		$rawline .= (length $rawline ? " " : "") . $newline;
 		last unless $self->{backslash_continues_command} && $continued;
-	} 
+	}
 
     # is it a blank line?
     if($rawline =~ /^\s*$/) {
@@ -813,40 +802,11 @@ sub process_a_cmd
 
     my $tokens;
     my $expcode = 0;
-    if($rawline =~ /^\s*[!^]/ && !$self->{disable_history_expansion}) {
-        # check to see if this exact command is in the history.
-        # if so, user used history completion to enter it and therefore we
-        # won't subject it to history substitution.
-        my $match;
-        if($self->{term}->can('GetHistory')) {
-            my @history = $self->{term}->GetHistory();
-            # reformat line as it will appear in history
-            ($tokens) = $self->{parser}->parse_line(substr($rawline,1), messages=>1);
-            if($tokens) {
-                my $rawl = $self->{parser}->join_line($tokens);
-                $match = grep { $_ eq $rawl } @history;
-            }
-        }
-
-        if(!$match) {
-            $tokens = undef;    # need to re-parse the expanded line
-            # otherwise, we subject the line to history expansion
-            # $self->{term}->can('history_expand') returns false???
-            # it's probably autoloaded dammit -- dunno what to do about that.
-            ($expcode, $rawline) = $self->{term}->history_expand($rawline);
-            if($expcode == -1) {
-                $self->error($rawline."\n");
-                return undef;
-            }
-        }
-    }
-
     my $retval = undef;
     my $str = $rawline;
-	my $save_to_history = 1;
+    my $save_to_history = 1;
 
-    # parse the line unless it was already parsed as part of history expansion
-    ($tokens) = $self->{parser}->parse_line($rawline, messages=>1) unless $tokens;
+    ($tokens) = $self->{parser}->parse_line($rawline, messages=>1);
 
     if(defined $tokens) {
         $str = $self->{parser}->join_line($tokens);
@@ -1119,7 +1079,7 @@ The index of the token containing the cursor.
 
 The character offset of the cursor in the token.
 
-For instance, if the cursor is on the first character of the 
+For instance, if the cursor is on the first character of the
 third token, tokno will be 2 and tokoff will be 0.
 
 =item twice
@@ -1530,7 +1490,7 @@ sub completion_function
     if($self->{debug_complete} >= 1) {
         print "\ntext='$text', line='$line', start=$start, cursor=$cursor";
 
-        print "\ntokens=(", join(", ", @$tokens), ") tokno=" . 
+        print "\ntokens=(", join(", ", @$tokens), ") tokno=" .
             (defined($tokno) ? $tokno : 'undef') . " tokoff=" .
             (defined($tokoff) ? $tokoff : 'undef');
 
@@ -1835,7 +1795,7 @@ Executes a command and returns the result.  It takes a single
 argument: the parms data structure.
 
 parms is a subset of the cmpl data structure (see the L<complete/complete(cmpl)>
-routine for more).  Briefly, it contains: 
+routine for more).  Briefly, it contains:
 cset, cmd, cname, args (see L</get_deep_command>),
 tokens and rawline (the tokenized and untokenized command lines).
 See L<complete|/complete(cmpl)> for full descriptions of these fields.
@@ -1932,18 +1892,11 @@ sub call_command
 
 =back
 
-=head1 BUGS
-
-History expansion does not respect token_chars.  To make it do
-so would require either adding this feature to the readline
-library or re-writing history_expand in Perl -- neither of which
-sounds very realistic.
-
 =head1 LICENSE
 
-Copyright (c) 2003-2006 Scott Bronson, all rights reserved. 
-This program is free software; you can redistribute it and/or modify 
-it under the same terms as Perl itself.  
+Copyright (c) 2003-2006 Scott Bronson, all rights reserved.
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =head1 AUTHOR
 

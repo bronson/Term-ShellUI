@@ -1,5 +1,6 @@
 - Relicensed from the somewhat ambiguous Perl license to the MIT license.
 - Remove complete_history callback. It was an odd, ShellUI-specific feature.
+- Remove history expansion (!!, !$).  That implementation was too buggy.
 
 
 0.86: 26 Apr 2007

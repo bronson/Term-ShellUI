@@ -1,6 +1,6 @@
 
 
-                     Term::ShellUI README
+                       Term::ShellUI
 
 
 Term::ShellUI makes it easy to implement a comprehensive Bash or
@@ -31,8 +31,7 @@ Fire up examples/synopsis-big.  Hit 'help' to display the available
 commands or 'help exists' to show detailed help for a command.  Notice
 how everything can be tab-completed.  Experiment with passing the wrong
 number of arguments to a command.  Scroll back through history using the
-up arrow and use the history command.  Use !! to repeat the last command
-or !$ to repeat just the last argument.
+up arrow and use the history command.
 
 Run 'perldoc lib/Term/ShellUI.pm' to see the API documentation.
 
