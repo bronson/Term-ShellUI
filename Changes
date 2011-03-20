@@ -1,4 +1,7 @@
+0.9: 20 Mar 2011
+
 - Relicensed from the somewhat ambiguous Perl license to the MIT license.
+- Add eof_exit_hooks, patch by Lester Hightower
 - Remove complete_history callback. It was an odd, ShellUI-specific feature.
 - Remove history expansion (!!, !$, ^o^n).  That implementation was too buggy.
 - Fix bug: completion suggestion wasn't printed with Term::ReadLine::Gnu.
