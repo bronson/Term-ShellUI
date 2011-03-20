@@ -30,7 +30,7 @@ Term::ShellUI - A fully-featured shell-like command line environment
                   maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
                   proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
               },
-			  "chdir" => { alias => 'cd' },
+              "chdir" => { alias => 'cd' },
               "pwd" => {
                   desc => "Print the current working directory",
                   maxargs => 0, proc => sub { system('pwd'); },
@@ -161,7 +161,7 @@ directory.
              maxargs => 0,
              method => sub { shift->exit_requested(1); }
          },
-		 "q" => { alias => 'quit', exclude_from_completion => 1 },
+         "q" => { alias => 'quit', exclude_from_completion => 1 },
      };
  }
 
@@ -645,8 +645,8 @@ Normally commands don't respect backslash continuation.  If you
 pass backslash_continues_command=>1 to L</new>, then whenever a line
 ends with a backslash, Term::ShellUI will continue reading.  The backslash
 is replaced with a space, so
-	$ abc \
-	> def
+    $ abc \
+    > def
 
 Will produce the command string 'abc  def'.
 
@@ -673,14 +673,14 @@ and the second item is the prompt when the command is being continued.
 For instance, this would emulate Bash's behavior ($ is the normal
 prompt, but > is the prompt when continuing).
 
-	$term->prompt(['$', '>']);
+    $term->prompt(['$', '>']);
 
 Of course, you specify backslash_continues_command=>1 to to L</new> to cause
 commands to continue.
 
 And, of course, you can use an array of procs too.
 
-	$term->prompt([sub {'$'}, sub {'<'}]);
+    $term->prompt([sub {'$'}, sub {'<'}]);
 
 =item token_chars
 
@@ -712,7 +712,7 @@ sub new
         prompt => "$0> ",
         commands => undef,
         blank_repeats_cmd => 0,
-		backslash_continues_command => 0,
+        backslash_continues_command => 0,
         history_file => undef,
         history_max => 500,
         token_chars => '',
@@ -775,24 +775,24 @@ sub process_a_cmd
     $self->{completeline} = "";
     my $OUT = $self->{'OUT'};
 
-	my $rawline = "";
-	for(;;) {
-		my $prompt = $self->prompt();
-		$prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
-		$prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
-		my $newline = $self->{term}->readline($prompt);
+    my $rawline = "";
+    for(;;) {
+        my $prompt = $self->prompt();
+        $prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
+        $prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
+        my $newline = $self->{term}->readline($prompt);
 
-		# EOF exits
-		unless(defined $newline) {
-			print $OUT "\n";
-			$self->exit_requested(1);
-			return undef;
-		}
+        # EOF exits
+        unless(defined $newline) {
+            print $OUT "\n";
+            $self->exit_requested(1);
+            return undef;
+        }
 
-		my $continued = ($newline =~ s/\\$//);
-		$rawline .= (length $rawline ? " " : "") . $newline;
-		last unless $self->{backslash_continues_command} && $continued;
-	}
+        my $continued = ($newline =~ s/\\$//);
+        $rawline .= (length $rawline ? " " : "") . $newline;
+        last unless $self->{backslash_continues_command} && $continued;
+    }
 
     # is it a blank line?
     if($rawline =~ /^\s*$/) {
@@ -830,16 +830,16 @@ sub process_a_cmd
 
             $retval = $self->call_command($parms);
 
-			if(exists $cmd->{exclude_from_history}) {
-				$save_to_history = 0;
-			}
+            if(exists $cmd->{exclude_from_history}) {
+                $save_to_history = 0;
+            }
         }
     }
 
     # Add to history unless it's a dupe of the previous command.
-	if($save_to_history && $str ne $self->{prevcmd}) {
-		$self->{term}->addhistory($str);
-	}
+    if($save_to_history && $str ne $self->{prevcmd}) {
+        $self->{term}->addhistory($str);
+    }
     $self->{prevcmd} = $str;
 
     return $retval;
@@ -1289,11 +1289,11 @@ sub get_deep_command
 
     # loop through all synonyms to find the actual command
     while(exists($cset->{$name}) && (
-		exists($cset->{$name}->{'alias'}) ||
-		exists($cset->{$name}->{'syn'})
-	)) {
+        exists($cset->{$name}->{'alias'}) ||
+        exists($cset->{$name}->{'syn'})
+    )) {
         $name = $cset->{$name}->{'alias'} ||
-				$cset->{$name}->{'syn'};
+                $cset->{$name}->{'syn'};
     }
 
     my $cmd = $cset->{$name};
@@ -1548,10 +1548,10 @@ sub completion_function
 
     my $retval = $self->complete($cmpl);
     $retval = [] unless defined($retval);
-	unless(ref($retval) eq 'ARRAY') {
-		$self->completemsg("$retval\n") if $cmpl->{twice};
-		$retval = [];
-	}
+    unless(ref($retval) eq 'ARRAY') {
+        $self->completemsg("$retval\n") if $cmpl->{twice};
+        $retval = [];
+    }
 
     if($self->{debug_complete} >= 2) {
         print "returning (", join(", ", @$retval), ")\n";
@@ -1776,13 +1776,13 @@ sub save_history
 
     if(open HIST, '>'.$self->{history_file}) {
         local $, = "\n";
-		my @list = $self->{term}->GetHistory();
-		if(@list) {
-			my $max = $#list;
-			$max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
-			print HIST @list[$#list-$max..$#list];
-			print HIST "\n";
-		}
+        my @list = $self->{term}->GetHistory();
+        if(@list) {
+            my $max = $#list;
+            $max = $self->{history_max}-1 if $self->{history_max}-1 < $max;
+            print HIST @list[$#list-$max..$#list];
+            print HIST "\n";
+        }
         close HIST;
     } else {
         $self->error("Could not open ".$self->{history_file}." for writing $!\n");
@@ -1820,7 +1820,7 @@ sub call_cmd
 
     my $retval = undef;
     if(exists $cmd->{meth} || exists $cmd->{method}) {
-		my $meth = $cmd->{meth} || $cmd->{method};
+        my $meth = $cmd->{meth} || $cmd->{method};
         # if meth is a code ref, call it, else it's a string, print it.
         if(ref($meth) eq 'CODE') {
             $retval = eval { &$meth($self, $parms, @{$parms->{args}}) };
@@ -1842,7 +1842,7 @@ sub call_cmd
             print $OUT $self->get_all_cmd_summaries($cmd->{cmds});
         } else {
             $self->error("The ". $self->get_cname($parms->{cname}) .
-				" command has no proc or method to call!\n");
+                " command has no proc or method to call!\n");
         }
     }
 
@@ -1860,7 +1860,7 @@ sub call_command
             (exists($parms->{cset}->{''}->{proc}) ||
              exists($parms->{cset}->{''}->{meth}) ||
              exists($parms->{cset}->{''}->{method})
-			)
+            )
         ) {
             # default command exists and is callable
             my $save = $parms->{cmd};
