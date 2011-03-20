@@ -85,7 +85,6 @@ EOL
 			proc => "No command here by that name!\n",
 			desc => "No help for unknown commands.",
 			doc => "Well, here's a little help: don't type them.\n",
-			args => sub { shift->complete_history(@_) },
 		},
 	};
 }

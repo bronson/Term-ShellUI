@@ -1,4 +1,5 @@
 - Relicensed from the somewhat ambiguous Perl license to the MIT license.
+- Remove complete_history callback. It was an odd, ShellUI-specific feature.
 
 
 0.86: 26 Apr 2007
