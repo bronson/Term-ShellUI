@@ -1938,9 +1938,8 @@ sub call_command
 
 =head1 LICENSE
 
-Copyright (c) 2003-2006 Scott Bronson, all rights reserved.
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+Copyright (c) 2003-2011 Scott Bronson, all rights reserved.
+This program is free software released under the MIT license.
 
 =head1 AUTHORS
 

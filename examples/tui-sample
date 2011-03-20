@@ -3,7 +3,7 @@
 
 # This shows the similarities between Term::TUI (see the sample.pl file)
 # and Term::ShellUI.  This example allows you to enter any number of arguments
-# (except for subs of course).  Released in the public domain.
+# (except for subs of course).
 
 use strict;
 use lib '../lib';

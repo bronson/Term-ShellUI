@@ -2,7 +2,7 @@
 
 # This was originally the example code from Term::ShellUI's documentation
 # but it grew too big.  Now it's intended to demonstrate most of the
-# available features and yet still be easy to read.
+# available features and still be easy to read.
 
 use strict;
 use lib '../lib';

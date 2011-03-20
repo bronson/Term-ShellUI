@@ -527,9 +527,8 @@ None known.
 
 =head1 LICENSE
 
-Copyright (c) 2003 Scott Bronson, all rights reserved.
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+Copyright (c) 2003-2011 Scott Bronson, all rights reserved.
+This program is covered by the MIT license.
 
 =head1 AUTHOR
 
