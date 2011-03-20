@@ -757,6 +757,8 @@ sub new
     $self->{OUT} = $self->{term}->OUT || \*STDOUT;
     $self->{prevcmd} = "";  # cmd to run again if user hits return
 
+    @{$self->{eof_exit_hooks}} = ();
+
     return $self;
 }
 
@@ -776,7 +778,7 @@ sub process_a_cmd
     my $OUT = $self->{'OUT'};
 
     my $rawline = "";
-    for(;;) {
+    INPUT_LOOP: for(;;) {
         my $prompt = $self->prompt();
         $prompt = $prompt->[length $rawline ? 1 : 0] if ref $prompt eq 'ARRAY';
         $prompt = $prompt->($self, $rawline) if ref $prompt eq 'CODE';
@@ -784,6 +786,15 @@ sub process_a_cmd
 
         # EOF exits
         unless(defined $newline) {
+            # If we have eof_exit_hooks let them have a say
+            if(scalar(@{$self->{eof_exit_hooks}})) {
+                foreach my $sub (@{$self->{eof_exit_hooks}}) {
+                    if(&$sub()) {
+                        next INPUT_LOOP;
+                    }
+                }
+            }
+
             print $OUT "\n";
             $self->exit_requested(1);
             return undef;
@@ -936,6 +947,30 @@ Returns the old state of the flag.
 
 sub exit_requested { return shift->getset('done', shift); }
 
+=item add_eof_exit_hook(subroutine_reference)
+
+Call this method to add a subroutine as a hook into Term::ShellUI's
+"exit on EOF" (Ctrl-D) functionality. When a user enters Ctrl-D,
+Term::ShellUI will call each function in this hook list, in order,
+and will exit only if all of them return 0. The first function to
+return a non-zero value will stop further processing of these hooks
+and prevent the program from exiting.
+
+The return value of this method is the placement of the hook routine
+in the hook list (1 is first) or 0 (zero) on failure.
+
+=cut
+
+sub add_eof_exit_hook {
+    my $self = shift @_;
+    my $refcode = shift @_;
+    if(ref($refcode) eq 'CODE') {
+        push(@{$self->{eof_exit_hooks}}, $refcode);
+        return scalar @{$self->{eof_exit_hooks}};
+    }
+    return 0;
+}
+
 =item get_cname(cname)
 
 This is a tiny utility function that turns the cname (array ref
@@ -953,12 +988,14 @@ sub get_cname
     return join(" ", @$cname);
 }
 
-
+=back
 
 =head1 OVERRIDES
 
 These are routines that probably already do the right thing.
 If not, however, they are designed to be overridden.
+
+=over
 
 =item blank_line()
 
@@ -1001,7 +1038,7 @@ sub error
     print STDERR @_;
 }
 
-
+=back
 
 =head1 WRITING A COMPLETION ROUTINE
 
@@ -1104,6 +1141,8 @@ The character position of the cursor in rawline.
 
 The following are utility routines that your completion function
 can call.
+
+=over
 
 =item completemsg(msg)
 
@@ -1214,11 +1253,15 @@ sub force_to_string
     return $results;
 }
 
+=back
+
 =head1 INTERNALS
 
 These commands are internal to ShellUI.
 They are documented here only for completeness -- you
 should never need to call them.
+
+=over
 
 =item get_deep_command
 
@@ -1894,9 +1937,10 @@ Copyright (c) 2003-2006 Scott Bronson, all rights reserved.
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
 Scott Bronson E<lt>bronson@rinspin.comE<gt>
+Lester Hightower E<lt>hightowe@cpan.orgE<gt>
 
 =cut
 

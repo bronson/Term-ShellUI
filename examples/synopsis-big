@@ -13,6 +13,7 @@ my $term = new Term::ShellUI(
 		commands => get_commands(),
 		history_file => '~/.shellui-synopsis-history',
 	);
+$term->add_eof_exit_hook(sub {print "Type 'quit' to quit.\n"; return 1;});
 print 'Using '.$term->{term}->ReadLine."\n";
 $term->run();
 
