@@ -15,7 +15,7 @@ my $term = new Term::ShellUI(
 	);
 $term->add_eof_exit_hook(sub {print "Type 'quit' to quit.\n"; return 1;});
 print 'Using '.$term->{term}->ReadLine."\n";
-$term->run();
+$term->run(@ARGV);
 
 
 sub get_commands

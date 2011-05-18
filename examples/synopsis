@@ -27,5 +27,5 @@ my $term = new Term::ShellUI(
 	);
 
 print 'Using '.$term->{term}->ReadLine."\n";
-$term->run();
+$term->run(@ARGV);
 

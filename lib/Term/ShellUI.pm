@@ -866,17 +866,35 @@ sub process_a_cmd
 The main loop.  Processes all commands until someone calls
 C<L</"exit_requested(exitflag)"|exit_requested>(true)>.
 
+If you pass arguments, they are joined and run once.  For
+instance, $term->run(@ARGV) allows your program to be run
+interactively or noninteractively:
+
+=over
+
+=item myshell help
+
+Runs the help command and exits.
+
+=item myshell
+
+Invokes an interactive Term::ShellUI.
+
+=back
+
 =cut
 
 sub run
 {
     my $self = shift;
+    my $incmd = join " ", @_;
 
     $self->load_history();
     $self->getset('done', 0);
 
     while(!$self->{done}) {
-        $self->process_a_cmd();
+        $self->process_a_cmd($incmd);
+        last if $incmd;  # only loop if we're prompting for commands
     }
 
     $self->save_history();
