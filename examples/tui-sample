@@ -5,6 +5,8 @@
 # and Term::ShellUI.  This example allows you to enter any number of arguments
 # (except for subs of course).
 
+# This file is released under the MIT license.
+
 use strict;
 use lib '../lib';
 use Term::ShellUI;

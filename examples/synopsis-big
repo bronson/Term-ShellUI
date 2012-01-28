@@ -4,6 +4,8 @@
 # but it grew too big.  Now it's intended to demonstrate most of the
 # available features and still be easy to read.
 
+# This file is released under the MIT license.
+
 use strict;
 use lib '../lib';
 

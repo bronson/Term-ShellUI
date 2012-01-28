@@ -3,6 +3,8 @@
 # Example code from the module's POD to ensure that it actually works.
 # Just three simple commands to show argument handling and completion.
 
+# This file is released under the MIT license.
+
 use strict;
 use lib '../lib';
 
