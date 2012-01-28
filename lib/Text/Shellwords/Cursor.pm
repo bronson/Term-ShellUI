@@ -521,6 +521,8 @@ sub join_line
 
 =back
 
+=back
+
 =head1 BUGS
 
 None known.
