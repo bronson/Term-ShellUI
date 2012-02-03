@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Term-ShellUI
-version:            0.91
+version:            0.92
 abstract:           ~
 author:
     - Scott Bronson (bronson@rinspin.com)

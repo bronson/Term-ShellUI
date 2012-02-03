@@ -1,9 +1,14 @@
+0.92: 03 Feb 2012
+
+- Cleanups and fixes for Debian packaging by Boris Peck.
+
+
 0.91: 17 May 2011
 
 - Support calling commands noninteractively (patch by Christian Kuelker)
 - Support calling $term->run() multiple times (patch by Ryan Gies)
 - Now clients can call process_a_cmd manually (patch by Martin Kluge)
-- Undeprecate Term::ReadLine::Perl since it works on Windows.
+- Undeprecate Term::ReadLine::Perl since it works better on Windows.
 
 
 0.9: 20 Mar 2011

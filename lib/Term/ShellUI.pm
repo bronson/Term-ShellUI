@@ -13,7 +13,7 @@ use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.91';
+$VERSION = '0.92';
 
 
 =head1 NAME
