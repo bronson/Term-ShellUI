@@ -9,11 +9,12 @@ package Term::ShellUI;
 
 use strict;
 
+use Scalar::Util qw(reftype);
 use Term::ReadLine ();
 use Text::Shellwords::Cursor;
 
 use vars qw($VERSION);
-$VERSION = '0.92';
+$VERSION = '0.92_01';
 
 
 =head1 NAME
@@ -754,7 +755,11 @@ sub new
     # $attrs->{history_word_delimiters} = " \t\n".$self->{token_chars};
     $attrs->{completion_function} = sub { completion_function($self, @_); };
 
-    $self->{OUT} = $self->{term}->OUT || \*STDOUT;
+    if (reftype($self->{term}) == 'HASH') {
+	$self->{OUT} = $self->{term}->{OUT} || \*STDOUT;
+    } else {
+	$self->{OUT} = $self->{term}->OUT || \*STDOUT;
+    }
     $self->{prevcmd} = "";  # cmd to run again if user hits return
 
     @{$self->{eof_exit_hooks}} = ();
