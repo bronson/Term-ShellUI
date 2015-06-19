@@ -1,3 +1,9 @@
+0.93: 18 Jun 2015
+
+- Tolerance for more OO Readline implementations,
+  e.g. Term::ReadLine::Perl5
+
+
 0.92: 03 Feb 2012
 
 - Cleanups and fixes for Debian packaging by Boris Peck.
