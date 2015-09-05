@@ -675,7 +675,7 @@ prompt, but > is the prompt when continuing).
 
     $term->prompt(['$', '>']);
 
-Of course, you specify backslash_continues_command=>1 to to L</new> to cause
+Of course, you specify backslash_continues_command=>1 to L</new> to cause
 commands to continue.
 
 And, of course, you can use an array of procs too.
@@ -864,7 +864,7 @@ sub process_a_cmd
 =item run()
 
 The main loop.  Processes all commands until someone calls
-C<L</"exit_requested(exitflag)"|exit_requested>(true)>.
+C<L<exit_requested|/exit_requested(exitflag)>(true)>.
 
 If you pass arguments, they are joined and run once.  For
 instance, $term->run(@ARGV) allows your program to be run
