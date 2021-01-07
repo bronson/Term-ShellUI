@@ -224,7 +224,7 @@ Similar to proc, but passes more arguments.  Where proc simply passes
 the arguments for the command, method also passes the Term::ShellUI object
 and the command's parms object (see L</call_cmd>
 for more on parms).  Most commands can be implemented entirely using
-a simple proc procedure, but sometimes they require addtional information
+a simple proc procedure, but sometimes they require additional information
 supplied to the method.  Like proc, method may also be a string.
 
 =item args
@@ -628,7 +628,7 @@ This tells how many items to save to the history file.
 The default is 500.
 
 Note that this parameter does not affect in-memory history.  Term::ShellUI
-makes no attemt to cull history so you're at the mercy
+makes no attempt to cull history so you're at the mercy
 of the default of whatever ReadLine library you are using.
 See L<Term::ReadLine::Gnu/StifleHistory> for one way to change this.
 
@@ -1074,9 +1074,9 @@ what you want (see the L</CALLBACKS> section for the completion
 routines that come with ShellUI).
 
 Your routine returns an arrayref of possible completions,
-a string conaining a short but helpful note,
+a string containing a short but helpful note,
 or undef if an error prevented any completions from being generated.
-Return an empty array if there are simply no applicable competions.
+Return an empty array if there are simply no applicable completions.
 Be careful; the distinction between no completions and an error
 can be significant.
 

@@ -400,7 +400,7 @@ cursorpos.
 
 =item tokoff
 
-The character offet into tokno of cursorpos.
+The character offset into tokno of cursorpos.
 
 =back
 
