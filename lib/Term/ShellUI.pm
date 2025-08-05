@@ -1553,6 +1553,9 @@ sub completion_function
     $self->{term}->Attribs->{completion_suppress_append} = 0;
     $self->{suppress_completion_escape} = 0;
 
+    $line =~ s/([^\\])\\$/\1/g; # Strip uneven backslash at end
+    $line =~ s/^\\$//g; # Strip if it's only backslash
+
     # Twice is true if the user has hit tab twice on the same string
     my $twice = ($self->{completeline} eq $line);
     $self->{completeline} = $line;
